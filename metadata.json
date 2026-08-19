@@ -1,0 +1,6 @@
+{
+  "name": "Al Raza Cold Press Oil Mart",
+  "description": "Premium 100% pure wood-pressed natural oils, organic seed extraction, cold-press wellness advisor, and online mart.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

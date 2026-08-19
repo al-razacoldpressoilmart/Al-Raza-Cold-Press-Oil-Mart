@@ -1,0 +1,151 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Catch-all deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Security Helper Primitives
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'tshirtsprintingworld@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // Orders Validation
+    function isValidOrder(data) {
+      return data.id is string && data.id.size() <= 64 &&
+             data.customerName is string && data.customerName.size() >= 2 && data.customerName.size() <= 100 &&
+             data.customerPhone is string && data.customerPhone.size() >= 7 && data.customerPhone.size() <= 20 &&
+             data.shippingAddress is string && data.shippingAddress.size() >= 5 && data.shippingAddress.size() <= 300 &&
+             data.city is string && data.city.size() >= 2 && data.city.size() <= 60 &&
+             data.totalAmount is number && data.totalAmount >= 0 &&
+             data.paymentMethod in ['cod', 'easypaisa', 'jazzcash', 'bank_transfer', 'nayapay', 'sadapay'] &&
+             data.paymentStatus in ['pending', 'paid', 'failed', 'refunded'] &&
+             data.status in ['pending', 'confirmed', 'processing', 'dispatched', 'delivered', 'cancelled'] &&
+             data.createdAt is string;
+    }
+
+    // Reviews Validation
+    function isValidReview(data) {
+      return data.id is string && data.id.size() <= 64 &&
+             data.productId is string && data.productId.size() <= 64 &&
+             data.authorName is string && data.authorName.size() >= 2 && data.authorName.size() <= 80 &&
+             data.rating is number && data.rating >= 1 && data.rating <= 5 &&
+             data.comment is string && data.comment.size() >= 3 && data.comment.size() <= 1000 &&
+             data.createdAt is string;
+    }
+
+    // Custom Blend Validation
+    function isValidCustomBlend(data) {
+      return data.id is string && data.id.size() <= 64 &&
+             data.blendName is string && data.blendName.size() >= 2 && data.blendName.size() <= 100 &&
+             data.targetConcern is string && data.targetConcern.size() <= 100 &&
+             data.ingredients is string && data.ingredients.size() <= 500 &&
+             data.totalPrice is number && data.totalPrice >= 0 &&
+             data.createdAt is string;
+    }
+
+    // Store Config Validation
+    function isValidStoreConfig(data) {
+      return data.brandName is string && data.brandName.size() <= 100 &&
+             data.contactPhone1 is string && data.contactPhone1.size() <= 30 &&
+             data.whatsappNumber is string && data.whatsappNumber.size() <= 30 &&
+             (!('metaTitle' in data) || (data.metaTitle is string && data.metaTitle.size() <= 200)) &&
+             (!('metaDescription' in data) || (data.metaDescription is string && data.metaDescription.size() <= 500)) &&
+             (!('metaKeywords' in data) || (data.metaKeywords is string && data.metaKeywords.size() <= 500)) &&
+             (!('tiktokUrl' in data) || (data.tiktokUrl is string && data.tiktokUrl.size() <= 200)) &&
+             data.updatedAt is string;
+    }
+
+    // Batch Record Validation
+    function isValidBatch(data) {
+      return data.batchNumber is string && data.batchNumber.size() <= 40 &&
+             data.oilName is string && data.oilName.size() <= 80 &&
+             data.seedOrigin is string && data.seedOrigin.size() <= 100 &&
+             data.pressingTemperature is number && data.pressingTemperature >= 0 && data.pressingTemperature <= 100 &&
+             data.purityPercentage is number && data.purityPercentage >= 0 && data.purityPercentage <= 100 &&
+             data.pressingDate is string &&
+             data.expiryDate is string;
+    }
+
+    // Collection: Orders
+    match /orders/{orderId} {
+      allow get: if isValidId(orderId);
+      allow list: if true;
+      allow create: if isValidId(orderId) && isValidOrder(incoming());
+      allow update: if isValidId(orderId) && (
+        isAdmin() ||
+        (isValidOrder(incoming()) && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'paymentStatus']))
+      );
+      allow delete: if true;
+    }
+
+    // Collection: Reviews
+    match /reviews/{reviewId} {
+      allow read: if isValidId(reviewId);
+      allow list: if true;
+      allow create: if isValidId(reviewId) && isValidReview(incoming());
+      allow update: if isAdmin() || true;
+      allow delete: if true;
+    }
+
+    // Collection: Custom Blends
+    match /custom_blends/{blendId} {
+      allow get: if isValidId(blendId);
+      allow list: if true;
+      allow create: if isValidId(blendId) && isValidCustomBlend(incoming());
+      allow update, delete: if true;
+    }
+
+    // Collection: Store Master Config
+    match /store_config/{configId} {
+      allow get, list: if true;
+      allow create, update: if isAdmin() || isValidStoreConfig(incoming());
+      allow delete: if isAdmin();
+    }
+
+    // Collection: Products Catalog
+    match /products/{productId} {
+      allow get, list: if true;
+      allow create, update, delete: if true;
+    }
+
+    // Collection: Batch Verification Records
+    match /batches/{batchId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Admin collection for RBAC
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Test connection check
+    match /test/{testId} {
+      allow get: if true;
+    }
+  }
+}

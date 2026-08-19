@@ -1,0 +1,392 @@
+{
+  "entities": {
+    "Order": {
+      "title": "Customer Order",
+      "description": "An order placed for cold-pressed organic oils and wellness products",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique order identifier",
+          "maxLength": 64
+        },
+        "customerName": {
+          "type": "string",
+          "description": "Customer full name",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "customerPhone": {
+          "type": "string",
+          "description": "Customer contact mobile phone number",
+          "minLength": 7,
+          "maxLength": 20
+        },
+        "customerEmail": {
+          "type": "string",
+          "description": "Customer email address",
+          "maxLength": 120
+        },
+        "shippingAddress": {
+          "type": "string",
+          "description": "Full street delivery address",
+          "minLength": 5,
+          "maxLength": 300
+        },
+        "city": {
+          "type": "string",
+          "description": "Delivery destination city",
+          "minLength": 2,
+          "maxLength": 60
+        },
+        "totalAmount": {
+          "type": "number",
+          "description": "Total order amount in PKR"
+        },
+        "paymentMethod": {
+          "type": "string",
+          "description": "Selected payment gateway or COD",
+          "enum": ["cod", "easypaisa", "jazzcash", "bank_transfer", "nayapay", "sadapay"]
+        },
+        "paymentStatus": {
+          "type": "string",
+          "description": "Current payment settlement status",
+          "enum": ["pending", "paid", "failed", "refunded"]
+        },
+        "status": {
+          "type": "string",
+          "description": "Order fulfillment status",
+          "enum": ["pending", "confirmed", "processing", "dispatched", "delivered", "cancelled"]
+        },
+        "itemsSummary": {
+          "type": "string",
+          "description": "Concise summary description of ordered items and quantities",
+          "maxLength": 500
+        },
+        "specialInstructions": {
+          "type": "string",
+          "description": "Customer delivery notes or pressing requests",
+          "maxLength": 300
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp or server time of order placement"
+        }
+      },
+      "required": ["id", "customerName", "customerPhone", "shippingAddress", "city", "totalAmount", "paymentMethod", "paymentStatus", "status", "createdAt"]
+    },
+    "Review": {
+      "title": "Product Review",
+      "description": "User customer rating and verified feedback on pure oils",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique review record ID",
+          "maxLength": 64
+        },
+        "productId": {
+          "type": "string",
+          "description": "ID of the reviewed oil product",
+          "maxLength": 64
+        },
+        "authorName": {
+          "type": "string",
+          "description": "Name of reviewer",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "rating": {
+          "type": "number",
+          "description": "Rating score between 1 and 5"
+        },
+        "comment": {
+          "type": "string",
+          "description": "Review text feedback",
+          "minLength": 3,
+          "maxLength": 1000
+        },
+        "verifiedBuyer": {
+          "type": "boolean",
+          "description": "Whether customer has verified order purchase"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when review was submitted"
+        }
+      },
+      "required": ["id", "productId", "authorName", "rating", "comment", "createdAt"]
+    },
+    "CustomBlend": {
+      "title": "Custom Oil Blend Recipe",
+      "description": "User personalized bespoke cold-pressed oil blend",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique blend formula identifier",
+          "maxLength": 64
+        },
+        "blendName": {
+          "type": "string",
+          "description": "Name given to the oil blend",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "creatorName": {
+          "type": "string",
+          "description": "Name or handle of creator",
+          "maxLength": 80
+        },
+        "targetConcern": {
+          "type": "string",
+          "description": "Hair care, joint relief, skin glow, or baby massage",
+          "maxLength": 100
+        },
+        "ingredients": {
+          "type": "string",
+          "description": "Ingredient oils composition summary",
+          "maxLength": 500
+        },
+        "bottleSize": {
+          "type": "string",
+          "description": "Volume size (e.g. 250ml, 500ml)",
+          "maxLength": 30
+        },
+        "totalPrice": {
+          "type": "number",
+          "description": "Calculated blend cost in PKR"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp"
+        }
+      },
+      "required": ["id", "blendName", "targetConcern", "ingredients", "totalPrice", "createdAt"]
+    },
+    "StoreConfig": {
+      "title": "Store Master Configuration",
+      "description": "Live store operational settings, timings, social media links, and branding",
+      "type": "object",
+      "properties": {
+        "brandName": {
+          "type": "string",
+          "description": "Display name of oil mart",
+          "maxLength": 100
+        },
+        "brandTagline": {
+          "type": "string",
+          "description": "Brand slogan or subtitle",
+          "maxLength": 150
+        },
+        "announcement": {
+          "type": "string",
+          "description": "Top banner promo or announcement announcement",
+          "maxLength": 200
+        },
+        "contactPhone1": {
+          "type": "string",
+          "description": "Helpline primary phone",
+          "maxLength": 30
+        },
+        "whatsappNumber": {
+          "type": "string",
+          "description": "WhatsApp direct contact number",
+          "maxLength": 30
+        },
+        "email": {
+          "type": "string",
+          "description": "Customer support email",
+          "maxLength": 100
+        },
+        "address": {
+          "type": "string",
+          "description": "Physical shop location",
+          "maxLength": 200
+        },
+        "martTimings": {
+          "type": "string",
+          "description": "Physical mart operating hours",
+          "maxLength": 150
+        },
+        "liveExtractionSchedule": {
+          "type": "string",
+          "description": "Live machine press schedule",
+          "maxLength": 150
+        },
+        "instagramUrl": {
+          "type": "string",
+          "description": "Instagram page URL",
+          "maxLength": 200
+        },
+        "facebookUrl": {
+          "type": "string",
+          "description": "Facebook profile URL",
+          "maxLength": 200
+        },
+        "twitterUrl": {
+          "type": "string",
+          "description": "Twitter/X handle URL",
+          "maxLength": 200
+        },
+        "youtubeUrl": {
+          "type": "string",
+          "description": "YouTube channel URL",
+          "maxLength": 200
+        },
+        "tiktokUrl": {
+          "type": "string",
+          "description": "TikTok profile URL",
+          "maxLength": 200
+        },
+        "metaTitle": {
+          "type": "string",
+          "description": "SEO search engine title tag",
+          "maxLength": 200
+        },
+        "metaDescription": {
+          "type": "string",
+          "description": "SEO search engine meta description summary",
+          "maxLength": 500
+        },
+        "metaKeywords": {
+          "type": "string",
+          "description": "SEO search engine comma-separated keywords",
+          "maxLength": 500
+        },
+        "activeThemeId": {
+          "type": "string",
+          "description": "Active color theme identifier",
+          "maxLength": 50
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Last settings sync timestamp"
+        }
+      },
+      "required": ["brandName", "contactPhone1", "whatsappNumber", "updatedAt"]
+    },
+    "BatchRecord": {
+      "title": "Cold Press Batch Certificate",
+      "description": "Lab tested verification record for cold-pressed oil production batch",
+      "type": "object",
+      "properties": {
+        "batchNumber": {
+          "type": "string",
+          "description": "Batch code (e.g. ALR-MST-2026-08)",
+          "maxLength": 40
+        },
+        "oilName": {
+          "type": "string",
+          "description": "Oil type pressed",
+          "maxLength": 80
+        },
+        "seedOrigin": {
+          "type": "string",
+          "description": "Farming origin of seeds",
+          "maxLength": 100
+        },
+        "pressingTemperature": {
+          "type": "number",
+          "description": "Maximum temperature reached during cold pressing in Celsius"
+        },
+        "purityPercentage": {
+          "type": "number",
+          "description": "Lab tested purity percentage (e.g. 99.8)"
+        },
+        "pressingDate": {
+          "type": "string",
+          "description": "Date of machine extraction",
+          "maxLength": 30
+        },
+        "expiryDate": {
+          "type": "string",
+          "description": "Best before date",
+          "maxLength": 30
+        },
+        "certifiedBy": {
+          "type": "string",
+          "description": "Master oil technician name",
+          "maxLength": 80
+        }
+      },
+      "required": ["batchNumber", "oilName", "seedOrigin", "pressingTemperature", "purityPercentage", "pressingDate", "expiryDate"]
+    },
+    "Product": {
+      "title": "Store Product",
+      "description": "Cold-pressed oil product catalog item with pricing and sizes",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique product code or slug",
+          "maxLength": 64
+        },
+        "name": {
+          "type": "string",
+          "description": "Product display name in English",
+          "maxLength": 100
+        },
+        "nativeName": {
+          "type": "string",
+          "description": "Urdu/Regional name (e.g. سرسوں کا تیل)",
+          "maxLength": 100
+        },
+        "tagline": {
+          "type": "string",
+          "description": "Short marketing headline",
+          "maxLength": 150
+        },
+        "description": {
+          "type": "string",
+          "description": "Full product description and benefits",
+          "maxLength": 2000
+        },
+        "category": {
+          "type": "string",
+          "description": "Store category classification",
+          "enum": ["cooking", "wellness", "beauty", "bundles"]
+        },
+        "heroImage": {
+          "type": "string",
+          "description": "Product visual picture URL"
+        },
+        "rating": {
+          "type": "number",
+          "description": "Average review score"
+        },
+        "reviewCount": {
+          "type": "number",
+          "description": "Total number of verified buyer reviews"
+        }
+      },
+      "required": ["id", "name", "category"]
+    }
+  },
+  "firestore": {
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Stores customer purchase orders and delivery tracking"
+    },
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Stores cold-pressed oil catalog products"
+    },
+    "/reviews/{reviewId}": {
+      "schema": "Review",
+      "description": "Stores user ratings and product feedback for cold-pressed oils"
+    },
+    "/custom_blends/{blendId}": {
+      "schema": "CustomBlend",
+      "description": "Stores customer custom oil formulations"
+    },
+    "/store_config/{configId}": {
+      "schema": "StoreConfig",
+      "description": "Stores singleton store operational configurations and social links"
+    },
+    "/batches/{batchId}": {
+      "schema": "BatchRecord",
+      "description": "Stores verification records for QR batch scanning"
+    }
+  }
+}
