@@ -211,7 +211,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           Customer: customerName,
           Phone: customerPhone,
           Address: `${address}, ${city}`,
-          Payment_Method: paymentMethod,
+          Payment_Method: currentPaymentMethod?.name || selectedMethodId,
           Total_Amount: `Rs. ${finalTotal}`,
           Order_Details: cartItems.map((it) => `${it.product.name} (${it.product.sizes[it.selectedSizeIndex]?.size}) x ${it.quantity}`).join(" | ")
         })

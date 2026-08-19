@@ -95,26 +95,42 @@ export const OwnerAnalyticsDashboard: React.FC<OwnerAnalyticsDashboardProps> = (
     };
   }, [orders, products, reviews]);
 
-  // Daily & Weekly Trend Data (Calculated from orders or simulated realistic timeline for demonstration)
+  // Daily Trend Data for the last 30 days
   const orderTrendsData = useMemo(() => {
-    // Generate last 7 days of trends
-    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    const baseAmounts = [14200, 18900, 24500, 21300, 29800, 38400, 42100];
-    const baseOrders = [6, 8, 11, 9, 14, 18, 22];
+    const data: Record<string, { day: string; dateObj: Date; revenue: number; orders: number }> = {};
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    // If real orders exist, add them to Sunday/recent
-    const realTotal = kpis.totalRevenue;
-    if (realTotal > 0) {
-      baseAmounts[6] += Math.round(realTotal * 0.4);
-      baseOrders[6] += orders.length;
+    // Initialize the last 30 days with zero data
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split("T")[0]; // YYYY-MM-DD
+      const dayLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      data[key] = { day: dayLabel, dateObj: d, revenue: 0, orders: 0 };
     }
 
-    return days.map((day, idx) => ({
-      day,
-      revenue: baseAmounts[idx],
-      orders: baseOrders[idx],
-    }));
-  }, [orders, kpis.totalRevenue]);
+    // Populate with actual order data
+    orders.forEach(order => {
+      if (order.createdAt || order.date) {
+        const orderDate = new Date(order.createdAt || order.date);
+        orderDate.setHours(0, 0, 0, 0);
+        const diffTime = Math.abs(today.getTime() - orderDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+        
+        if (diffDays <= 30 && orderDate <= today) {
+           const key = orderDate.toISOString().split("T")[0];
+           if (data[key]) {
+             const amt = Number(order.totalAmount || 0);
+             data[key].revenue += isNaN(amt) ? 0 : amt;
+             data[key].orders += 1;
+           }
+        }
+      }
+    });
+
+    return Object.values(data).sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
+  }, [orders]);
 
   // Product popularity & stock distribution data
   const productStockData = useMemo(() => {
@@ -257,8 +273,8 @@ export const OwnerAnalyticsDashboard: React.FC<OwnerAnalyticsDashboardProps> = (
         <div className="lg:col-span-8 bg-white p-5 rounded-2xl border border-amber-200 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-serif font-bold text-sm text-amber-950">Daily & Weekly Sales Trend</h4>
-              <p className="text-xs text-amber-800/70">7-Day Gross Revenue & Volume Performance</p>
+              <h4 className="font-serif font-bold text-sm text-amber-950">Last 30 Days Sales Trend</h4>
+              <p className="text-xs text-amber-800/70">30-Day Gross Revenue & Volume Performance</p>
             </div>
             <div className="flex items-center gap-4 text-xs font-semibold">
               <span className="flex items-center gap-1.5 text-amber-700">

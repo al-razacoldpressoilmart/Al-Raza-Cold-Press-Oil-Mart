@@ -29,7 +29,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       }
       onClose();
     } catch (err: any) {
-      if (err.message && err.message.includes('auth/operation-not-allowed')) {
+      if (err.message && err.message.includes('auth/unauthorized-domain')) {
+         setError("Domain not authorized. Please go to Firebase Console -> Authentication -> Settings -> Authorized domains, and add this website's URL.");
+      } else if (err.message && err.message.includes('auth/operation-not-allowed')) {
         setError("Error: Email/Password login is not enabled in your Firebase Console. Please go to Firebase Console -> Authentication -> Sign-in method, and enable 'Email/Password'.");
       } else if (err.message && err.message.includes('auth/invalid-credential')) {
          setError("Incorrect email or password. Please try again.");
@@ -50,7 +52,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       await signInWithGoogle();
       onClose();
     } catch (err: any) {
-      setError(err.message || "Google sign-in failed.");
+      if (err.message && err.message.includes('auth/unauthorized-domain')) {
+         setError("Domain not authorized. Please go to Firebase Console -> Authentication -> Settings -> Authorized domains, and add this website's URL.");
+      } else {
+         setError(err.message || "Google sign-in failed.");
+      }
     } finally {
       setLoading(false);
     }

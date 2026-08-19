@@ -182,6 +182,23 @@ app.get("/api/batches", (_req, res) => {
   });
 });
 
+// Create Order & Notify Store Owner
+app.post("/api/orders", async (req, res) => {
+  try {
+    const orderData = req.body;
+    console.log("New Order Received:", orderData.orderId);
+    
+    // We optionally perform a server-side notification trigger here
+    // Currently, the client fires a FormSubmit to tshirtsprintingworld@gmail.com
+    // To ensure delivery, we could also use node-fetch to formsubmit or a webhook
+
+    res.json({ success: true, message: "Order processed successfully." });
+  } catch (error) {
+    console.error("Order processing error:", error);
+    res.status(500).json({ error: "Failed to process order." });
+  }
+});
+
 // Oil Wellness & Recommendation AI Advisor Endpoint
 app.post("/api/gemini/oil-advisor", async (req, res) => {
   try {
