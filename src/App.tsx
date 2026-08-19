@@ -20,8 +20,9 @@ import { OwnerPanelModal } from "./components/OwnerPanelModal";
 import { AffiliateModal } from "./components/AffiliateModal";
 import { OrderTrackingModal } from "./components/OrderTrackingModal";
 import { FloatingWhatsAppButton } from "./components/FloatingWhatsAppButton";
+import { AuthModal } from "./components/AuthModal";
 import { CheckCircle2, Shield, Settings, Sparkles, X } from "lucide-react";
-import { auth, signInWithGoogle, logOutUser } from "./lib/firebase";
+import { auth, logOutUser } from "./lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import {
   saveOrderToFirestore,
@@ -161,6 +162,7 @@ export default function App() {
   const [isAffiliateOpen, setIsAffiliateOpen] = useState(false);
   const [isOwnerPanelOpen, setIsOwnerPanelOpen] = useState(false);
   const [isOrderTrackingOpen, setIsOrderTrackingOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [trackingOrderId, setTrackingOrderId] = useState<string>("");
 
   const handleOpenOrderTracking = (orderId?: string) => {
@@ -754,7 +756,7 @@ export default function App() {
         scrollToSection={scrollToSection}
         storeConfig={storeConfig}
         user={user}
-        onSignIn={signInWithGoogle}
+        onSignIn={() => setIsAuthModalOpen(true)}
         onSignOut={logOutUser}
       />
 
@@ -890,6 +892,12 @@ export default function App() {
 
       {/* Floating WhatsApp Support Button */}
       <FloatingWhatsAppButton storeConfig={storeConfig} cart={cartItems} />
+
+      {/* Authentication Modal (Email/Google Login) */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+      />
 
       {/* 
         SECRET OWNER PANEL TRIGGER BUTTON:

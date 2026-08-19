@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, User } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, User } from "firebase/auth";
 import {
   getFirestore,
   doc,
@@ -93,7 +93,27 @@ export async function signInWithGoogle(): Promise<User | null> {
     return result.user;
   } catch (error) {
     console.error("Google sign-in error:", error);
-    return null;
+    throw error;
+  }
+}
+
+export async function loginWithEmail(email: string, pass: string): Promise<User | null> {
+  try {
+    const result = await signInWithEmailAndPassword(auth, email, pass);
+    return result.user;
+  } catch (error) {
+    console.error("Email sign-in error:", error);
+    throw error;
+  }
+}
+
+export async function signupWithEmail(email: string, pass: string): Promise<User | null> {
+  try {
+    const result = await createUserWithEmailAndPassword(auth, email, pass);
+    return result.user;
+  } catch (error) {
+    console.error("Email signup error:", error);
+    throw error;
   }
 }
 
