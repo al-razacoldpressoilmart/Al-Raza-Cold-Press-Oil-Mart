@@ -131,7 +131,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
             <a
               id="top-whatsapp-link"
-              href={`https://wa.me/${storeConfig.whatsappNumber}?text=Hello%20Al%20Raza%20Oil%20Mart,%20I%20would%20like%20to%20inquire%20about%20pure%20cold-pressed%20oils.`}
+              href={`https://wa.me/${(storeConfig.whatsappNumber || "").replace(/[^0-9]/g, "")}?text=Hello%20Al%20Raza%20Oil%20Mart,%20I%20would%20like%20to%20inquire%20about%20pure%20cold-pressed%20oils.`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-emerald-300 hover:text-emerald-200 font-medium"
@@ -454,7 +454,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>Call Helpline: {storeConfig.contactPhone1}</span>
             </a>
             <a
-              href={`https://wa.me/${storeConfig.whatsappNumber}`}
+              href={`https://wa.me/${(storeConfig.whatsappNumber || "").replace(/[^0-9]/g, "")}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-emerald-400 py-1 font-medium"

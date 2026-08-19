@@ -753,7 +753,7 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                 }`}
               >
                 <Phone className="w-4 h-4" />
-                <span>Helpline & Social Links</span>
+                <span>Helpline & Location Map</span>
               </button>
 
               <button
@@ -2047,10 +2047,10 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                   <div className="bg-stone-950 p-4 rounded-2xl border border-amber-900/30">
                     <h3 className="font-serif text-lg font-bold text-amber-200 flex items-center gap-2">
                       <Phone className="w-5 h-5 text-amber-400" />
-                      Store Helpline, WhatsApp, Address & Social Media Links
+                      Store Helpline, Location Map, & Social Media
                     </h3>
                     <p className="text-xs text-stone-400">
-                      Configure your store contact information and official social media profiles (Instagram, Facebook, Twitter/X, YouTube) to display in the website footer.
+                      Configure your store contact information, physical address, interactive Google Map, and official social media profiles.
                     </p>
                   </div>
 
@@ -2138,9 +2138,10 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                           type="url"
                           value={configForm.mapsUrl || ""}
                           onChange={(e) => setConfigForm({ ...configForm, mapsUrl: e.target.value })}
-                          placeholder="https://maps.google.com/?q=..."
+                          placeholder="https://maps.app.goo.gl/..."
                           className="w-full p-2 bg-stone-900 border border-stone-700 rounded-lg text-white"
                         />
+                        <p className="text-[10px] text-stone-500 mt-1">Used for the "Get Directions" button link.</p>
                       </div>
                     </div>
                   </div>

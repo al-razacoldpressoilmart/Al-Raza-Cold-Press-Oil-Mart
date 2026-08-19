@@ -19,6 +19,7 @@ import { Footer } from "./components/Footer";
 import { OwnerPanelModal } from "./components/OwnerPanelModal";
 import { AffiliateModal } from "./components/AffiliateModal";
 import { OrderTrackingModal } from "./components/OrderTrackingModal";
+import { FloatingWhatsAppButton } from "./components/FloatingWhatsAppButton";
 import { CheckCircle2, Shield, Settings, Sparkles, X } from "lucide-react";
 import { auth, signInWithGoogle, logOutUser } from "./lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
@@ -886,6 +887,9 @@ export default function App() {
         onToggleFeatureReview={handleToggleFeatureReview}
         onSaveOwnerReply={handleSaveOwnerReply}
       />
+
+      {/* Floating WhatsApp Support Button */}
+      <FloatingWhatsAppButton storeConfig={storeConfig} cart={cartItems} />
 
       {/* 
         SECRET OWNER PANEL TRIGGER BUTTON:

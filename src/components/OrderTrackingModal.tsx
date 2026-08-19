@@ -542,7 +542,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                 </div>
 
                 <a
-                  href={`https://wa.me/${storeConfig.whatsappNumber}?text=${encodeURIComponent(
+                  href={`https://wa.me/${(storeConfig.whatsappNumber || "").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
                     `Salam Al Raza Oil Mart! 🌿\n\nI am inquiring about the live tracking status of my Order:\n\n*Order ID:* ${selectedOrder.orderId}\n*Customer:* ${selectedOrder.customerName}\n*Phone:* ${selectedOrder.customerPhone}\n*Total Amount:* Rs. ${selectedOrder.totalAmount}\n\nPlease share the latest dispatch/delivery update!`
                   )}`}
                   target="_blank"

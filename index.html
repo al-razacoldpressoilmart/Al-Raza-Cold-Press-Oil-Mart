@@ -25,6 +25,20 @@
   </head>
   <body class="bg-amber-50/50 text-amber-950 antialiased selection:bg-amber-800 selection:text-amber-100">
     <div id="root"></div>
+    <!-- Suppress benign Vite HMR websocket errors in AI Studio preview -->
+    <script>
+      window.addEventListener('unhandledrejection', function(event) {
+        if (event.reason && event.reason.message && event.reason.message.includes('WebSocket')) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }
+      });
+      const originalConsoleError = console.error;
+      console.error = function(...args) {
+        if (typeof args[0] === 'string' && args[0].includes('failed to connect to websocket')) return;
+        originalConsoleError.apply(console, args);
+      };
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

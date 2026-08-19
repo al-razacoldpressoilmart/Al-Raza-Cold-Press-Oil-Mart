@@ -445,7 +445,7 @@ export const Footer: React.FC<FooterProps> = ({
 
             <div className="pt-2">
               <a
-                href={`https://wa.me/${storeConfig.whatsappNumber}?text=Hello%20Al%20Raza%20Oil%20Mart,%20I%20would%20like%20to%20place%20an%20order.`}
+                href={`https://wa.me/${(storeConfig.whatsappNumber || "").replace(/[^0-9]/g, "")}?text=Hello%20Al%20Raza%20Oil%20Mart,%20I%20would%20like%20to%20place%20an%20order.`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow cursor-pointer text-xs"

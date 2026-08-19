@@ -83,7 +83,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     const message = `Hello ${storeConfig.brandName}! 🌿\n\nI would like to place an instant order for:\n\n${itemsList}\n\n*Subtotal:* Rs. ${subtotal}\n*Delivery Fee:* ${deliveryFee === 0 ? "FREE" : `Rs. ${deliveryFee}`}\n*Total Amount:* Rs. ${finalTotal}\n\nPlease confirm availability and dispatch details!`;
 
     const encoded = encodeURIComponent(message);
-    window.open(`https://wa.me/${storeConfig.whatsappNumber}?text=${encoded}`, "_blank");
+    const cleanNumber = (storeConfig.whatsappNumber || "").replace(/[^0-9]/g, "");
+    window.open(`https://wa.me/${cleanNumber}?text=${encoded}`, "_blank");
   };
 
   return (

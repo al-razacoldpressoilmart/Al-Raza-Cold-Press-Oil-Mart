@@ -163,7 +163,7 @@ export const MartVisitSection: React.FC<MartVisitSectionProps> = ({ storeConfig 
                 </div>
                 <a
                   id="google-maps-directions-btn"
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                  href={storeConfig.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
                     `${storeConfig.brandName} ${storeConfig.address} ${storeConfig.city}`
                   )}`}
                   target="_blank"
@@ -218,7 +218,7 @@ export const MartVisitSection: React.FC<MartVisitSectionProps> = ({ storeConfig 
               </a>
 
               <a
-                href={`https://wa.me/${storeConfig.whatsappNumber}?text=Hello%20Al%20Raza%20Mart,%20I%20would%20like%20to%20place%20a%20pure%20cold%20pressed%20oil%20order.`}
+                href={`https://wa.me/${(storeConfig.whatsappNumber || "").replace(/[^0-9]/g, "")}?text=Hello%20Al%20Raza%20Mart,%20I%20would%20like%20to%20place%20a%20pure%20cold%20pressed%20oil%20order.`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2.5 bg-emerald-900/70 hover:bg-emerald-800 border border-emerald-700 p-3 rounded-xl text-emerald-100 transition-colors"

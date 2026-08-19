@@ -250,7 +250,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       `*Recorded TID Number:* ${tidNumber || "N/A"}\n\n` +
       `Please find attached my payment screenshot receipt for quick verification & dispatch!`;
 
-    return `https://wa.me/${storeConfig.whatsappNumber}?text=${encodeURIComponent(message)}`;
+    const cleanNumber = (storeConfig.whatsappNumber || "").replace(/[^0-9]/g, "");
+    return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
   };
 
   return (
