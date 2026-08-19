@@ -2102,6 +2102,17 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                           className="w-full p-2 bg-stone-900 border border-stone-700 rounded-lg text-white"
                         />
                       </div>
+                      <div className="sm:col-span-2">
+                        <label className="text-emerald-400 font-bold block mb-1">Order Notifications Email (Real-time)</label>
+                        <p className="text-stone-500 text-[10px] mb-1.5">You will receive instant email alerts at this address whenever a customer places a new order.</p>
+                        <input
+                          type="email"
+                          value={configForm.notificationEmail || ""}
+                          onChange={(e) => setConfigForm({ ...configForm, notificationEmail: e.target.value })}
+                          placeholder="your-personal-email@gmail.com"
+                          className="w-full p-2 bg-stone-900 border border-emerald-900/50 rounded-lg text-white outline-none focus:border-emerald-500"
+                        />
+                      </div>
                       <div>
                         <label className="text-stone-400 block mb-1">Physical Mart Address</label>
                         <input

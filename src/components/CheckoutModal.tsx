@@ -199,7 +199,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       }).catch(() => {});
 
       // Send silent email notification to owner via free FormSubmit API
-      const ownerEmail = "tshirtsprintingworld@gmail.com";
+      const ownerEmail = storeConfig.notificationEmail || storeConfig.email || "tshirtsprintingworld@gmail.com";
       fetch(`https://formsubmit.co/ajax/${ownerEmail}`, {
         method: "POST",
         headers: { 

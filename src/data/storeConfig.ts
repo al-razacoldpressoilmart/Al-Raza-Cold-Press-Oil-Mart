@@ -27,6 +27,7 @@ export interface StoreConfig {
   contactPhone2: string;
   whatsappNumber: string;
   email: string;
+  notificationEmail?: string; // Email for receiving real-time order notifications via FormSubmit
   address: string;
   city: string;
   martTimings: string;
@@ -82,6 +83,7 @@ export const DEFAULT_STORE_CONFIG: StoreConfig = {
   contactPhone2: "+92 321 7654321",
   whatsappNumber: "923001234567",
   email: "care@alrazaoilmart.com",
+  notificationEmail: "tshirtsprintingworld@gmail.com",
   address: "Shop #12-15, Main Organic Market Arcade, Commercial Area",
   city: "Lahore / Karachi",
   martTimings: "Monday – Saturday: 9:00 AM – 9:00 PM (Sunday Closed)",

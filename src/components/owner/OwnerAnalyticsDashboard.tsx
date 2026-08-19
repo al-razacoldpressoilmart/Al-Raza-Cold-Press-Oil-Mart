@@ -44,6 +44,12 @@ export const OwnerAnalyticsDashboard: React.FC<OwnerAnalyticsDashboardProps> = (
     let verifiedCount = 0;
     let pendingCount = 0;
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let current30DaysRevenue = 0;
+    let previous30DaysRevenue = 0;
+
     orders.forEach((o) => {
       const amt = Number(o.totalAmount || 0);
       totalRevenue += isNaN(amt) ? 0 : amt;
@@ -52,7 +58,26 @@ export const OwnerAnalyticsDashboard: React.FC<OwnerAnalyticsDashboardProps> = (
       } else {
         pendingCount++;
       }
+
+      if (o.createdAt || o.date) {
+        const orderDate = new Date(o.createdAt || o.date);
+        orderDate.setHours(0, 0, 0, 0);
+        const diffTime = today.getTime() - orderDate.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays <= 30 && diffDays >= 0) {
+          current30DaysRevenue += isNaN(amt) ? 0 : amt;
+        } else if (diffDays > 30 && diffDays <= 60) {
+          previous30DaysRevenue += isNaN(amt) ? 0 : amt;
+        }
+      }
     });
+
+    let revenueGrowthPct = 0;
+    if (previous30DaysRevenue > 0) {
+      revenueGrowthPct = ((current30DaysRevenue - previous30DaysRevenue) / previous30DaysRevenue) * 100;
+    } else if (current30DaysRevenue > 0) {
+      revenueGrowthPct = 100; // 100% growth if there was 0 previous revenue but there is current revenue
+    }
 
     const totalOrders = orders.length;
     const avgOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
@@ -92,6 +117,7 @@ export const OwnerAnalyticsDashboard: React.FC<OwnerAnalyticsDashboardProps> = (
       outOfStockCount,
       reviewsCount: approvedReviews.length,
       avgRating,
+      revenueGrowthPct,
     };
   }, [orders, products, reviews]);
 
@@ -226,7 +252,9 @@ export const OwnerAnalyticsDashboard: React.FC<OwnerAnalyticsDashboardProps> = (
           <div>
             <p className="text-[11px] text-amber-700 font-bold uppercase tracking-wider">Gross Revenue</p>
             <p className="text-xl font-serif font-bold text-amber-950 mt-0.5">Rs. {kpis.totalRevenue.toLocaleString()}</p>
-            <p className="text-[10px] text-emerald-700 font-semibold">+18.4% this week</p>
+            <p className={`text-[10px] font-semibold ${kpis.revenueGrowthPct >= 0 ? "text-emerald-700" : "text-rose-600"}`}>
+              {kpis.revenueGrowthPct > 0 ? "+" : ""}{kpis.revenueGrowthPct.toFixed(1)}% vs prev 30d
+            </p>
           </div>
         </div>
 
@@ -273,7 +301,12 @@ export const OwnerAnalyticsDashboard: React.FC<OwnerAnalyticsDashboardProps> = (
         <div className="lg:col-span-8 bg-white p-5 rounded-2xl border border-amber-200 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-serif font-bold text-sm text-amber-950">Last 30 Days Sales Trend</h4>
+              <div className="flex items-center gap-2">
+                <h4 className="font-serif font-bold text-sm text-amber-950">Last 30 Days Sales Trend</h4>
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${kpis.revenueGrowthPct >= 0 ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>
+                  {kpis.revenueGrowthPct > 0 ? "+" : ""}{kpis.revenueGrowthPct.toFixed(1)}% vs prev
+                </span>
+              </div>
               <p className="text-xs text-amber-800/70">30-Day Gross Revenue & Volume Performance</p>
             </div>
             <div className="flex items-center gap-4 text-xs font-semibold">
