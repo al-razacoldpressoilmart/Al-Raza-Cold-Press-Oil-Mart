@@ -21,6 +21,12 @@
       .font-display {
         font-family: 'Cinzel', serif;
       }
+      /* Forcefully hide Vite HMR error overlay */
+      vite-error-overlay {
+        display: none !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
     </style>
   </head>
   <body class="bg-amber-50/50 text-amber-950 antialiased selection:bg-amber-800 selection:text-amber-100">

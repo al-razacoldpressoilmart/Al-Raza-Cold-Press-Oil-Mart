@@ -29,7 +29,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       }
       onClose();
     } catch (err: any) {
-      setError(err.message || "Authentication failed. Please check your credentials and try again.");
+      if (err.message && err.message.includes('auth/operation-not-allowed')) {
+        setError("Error: Email/Password login is not enabled in your Firebase Console. Please go to Firebase Console -> Authentication -> Sign-in method, and enable 'Email/Password'.");
+      } else if (err.message && err.message.includes('auth/invalid-credential')) {
+         setError("Incorrect email or password. Please try again.");
+      } else if (err.message && err.message.includes('auth/email-already-in-use')) {
+         setError("This email is already registered. Please log in instead.");
+      } else {
+        setError(err.message || "Authentication failed. Please check your credentials and try again.");
+      }
     } finally {
       setLoading(false);
     }

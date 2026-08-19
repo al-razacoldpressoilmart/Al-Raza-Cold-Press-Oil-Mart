@@ -198,6 +198,25 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         body: JSON.stringify(orderPayload),
       }).catch(() => {});
 
+      // Send silent email notification to owner via free FormSubmit API
+      const ownerEmail = "tshirtsprintingworld@gmail.com";
+      fetch(`https://formsubmit.co/ajax/${ownerEmail}`, {
+        method: "POST",
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          _subject: `New Order Received - ${orderId} - Al Raza Mart`,
+          Customer: customerName,
+          Phone: customerPhone,
+          Address: `${address}, ${city}`,
+          Payment_Method: paymentMethod,
+          Total_Amount: `Rs. ${finalTotal}`,
+          Order_Details: cartItems.map((it) => `${it.product.name} (${it.product.sizes[it.selectedSizeIndex]?.size}) x ${it.quantity}`).join(" | ")
+        })
+      }).catch(() => { /* silent fail if network error */ });
+
       setCompletedOrder(orderPayload);
       setStep("success");
       triggerConfetti();
