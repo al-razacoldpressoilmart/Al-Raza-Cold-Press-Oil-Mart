@@ -5,7 +5,7 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
 return {
-    base: '/Al-Raza-Cold-Press-Oil-Mart/',
+    base: '/',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
