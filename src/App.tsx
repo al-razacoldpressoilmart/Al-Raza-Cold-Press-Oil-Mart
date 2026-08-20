@@ -240,34 +240,21 @@ export default function App() {
 
     const unsubProducts = subscribeProducts((remoteProducts) => {
       if (remoteProducts && remoteProducts.length > 0) {
-        setProducts((prev) => {
-          const deletedIds = getDeletedProductIds();
-          const validRemote = remoteProducts.filter((p) => !deletedIds.has(p.id));
-          const remoteIds = new Set(validRemote.map((p) => p.id));
-          const localOnly = prev.filter((p) => !remoteIds.has(p.id) && !deletedIds.has(p.id));
-          return [...validRemote, ...localOnly];
-        });
+        const deletedIds = getDeletedProductIds();
+        const validRemote = remoteProducts.filter((p) => !deletedIds.has(p.id));
+        setProducts(validRemote);
       }
     });
 
     const unsubReviews = subscribeReviews((remoteReviews) => {
       if (remoteReviews && remoteReviews.length > 0) {
-        setReviews((prev) => {
-          // Merge unique remote reviews
-          const remoteIds = new Set(remoteReviews.map((r) => r.id));
-          const localOnly = prev.filter((r) => !remoteIds.has(r.id));
-          return [...remoteReviews, ...localOnly];
-        });
+        setReviews(remoteReviews);
       }
     });
 
     const unsubOrders = subscribeOrders((remoteOrders) => {
       if (remoteOrders && remoteOrders.length > 0) {
-        setOrders((prev) => {
-          const remoteIds = new Set(remoteOrders.map((o) => o.id));
-          const localOnly = prev.filter((o) => !remoteIds.has(o.orderId || o.id));
-          return [...remoteOrders, ...localOnly];
-        });
+        setOrders(remoteOrders);
       }
     });
 
