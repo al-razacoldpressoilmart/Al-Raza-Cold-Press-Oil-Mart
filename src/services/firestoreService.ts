@@ -214,9 +214,7 @@ export function subscribeProducts(
       snapshot.forEach((d) => {
         prods.push(d.data() as Product);
       });
-      if (prods.length > 0) {
-        onProducts(prods);
-      }
+      onProducts(prods);
     },
     (error) => {
       console.warn("Products live subscription fallback to local:", error.message);

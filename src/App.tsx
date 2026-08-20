@@ -39,41 +39,7 @@ import {
   FirestoreOrder
 } from "./services/firestoreService";
 
-// Helpers for tracking deleted product IDs to prevent resurrection from cache/snapshots
-const getDeletedProductIds = (): Set<string> => {
-  try {
-    const saved = localStorage.getItem("alraza_deleted_product_ids");
-    return new Set<string>(saved ? JSON.parse(saved) : []);
-  } catch {
-    return new Set<string>();
-  }
-};
-
-const markProductIdDeleted = (productId: string) => {
-  try {
-    const saved = localStorage.getItem("alraza_deleted_product_ids");
-    const arr: string[] = saved ? JSON.parse(saved) : [];
-    if (!arr.includes(productId)) {
-      arr.push(productId);
-      localStorage.setItem("alraza_deleted_product_ids", JSON.stringify(arr));
-    }
-  } catch (e) {
-    console.warn("Error recording deleted product ID:", e);
-  }
-};
-
-const unmarkProductIdDeleted = (productId: string) => {
-  try {
-    const saved = localStorage.getItem("alraza_deleted_product_ids");
-    if (saved) {
-      const arr: string[] = JSON.parse(saved);
-      const filtered = arr.filter((id) => id !== productId);
-      localStorage.setItem("alraza_deleted_product_ids", JSON.stringify(filtered));
-    }
-  } catch (e) {
-    console.warn("Error unmarking deleted product ID:", e);
-  }
-};
+// Removed deleted product IDs helpers as they are no longer needed with hard-refresh mechanism
 
 export default function App() {
   // Firebase User Authentication State
@@ -81,28 +47,7 @@ export default function App() {
 
   // 1. Products state (Persisted in localStorage so owner modifications persist)
   const [products, setProducts] = useState<Product[]>(() => {
-    try {
-      const deletedIds = getDeletedProductIds();
-      const saved = localStorage.getItem("alraza_products");
-      if (saved) {
-        const parsed: Product[] = JSON.parse(saved);
-        // Ensure stock quantities are initialized properly and excluded deleted items
-        return parsed
-          .filter((p) => !deletedIds.has(p.id))
-          .map((p) => ({
-            ...p,
-            sizes: p.sizes.map((s) => ({
-              ...s,
-              stockQuantity: s.stockQuantity !== undefined ? s.stockQuantity : 20,
-              lowStockThreshold: s.lowStockThreshold || 5,
-              inStock: s.inStock !== undefined ? s.inStock : true,
-            })),
-          }));
-      }
-      return PRODUCTS.filter((p) => !deletedIds.has(p.id));
-    } catch {
-      return PRODUCTS;
-    }
+    return PRODUCTS;
   });
 
   // 2. Store Config state (Persisted in localStorage)
@@ -239,10 +184,17 @@ export default function App() {
     });
 
     const unsubProducts = subscribeProducts((remoteProducts) => {
-      if (remoteProducts && remoteProducts.length > 0) {
-        const deletedIds = getDeletedProductIds();
-        const validRemote = remoteProducts.filter((p) => !deletedIds.has(p.id));
-        setProducts(validRemote);
+      if (remoteProducts) {
+        if (remoteProducts.length > 0) {
+          // Hard-refresh from Firestore, completely ignoring stale localStorage or local deleted filters
+          setProducts(remoteProducts);
+        } else {
+          // If Firestore is completely empty, re-initialize with the default 6 products
+          setProducts(PRODUCTS);
+          PRODUCTS.forEach(p => saveProductToFirestore(p).catch(() => {}));
+        }
+        // Clear any stale local deleted IDs cache so it doesn't artificially hide items in future
+        localStorage.removeItem("alraza_deleted_product_ids");
       }
     });
 
@@ -587,9 +539,6 @@ export default function App() {
 
   // Owner Panel Handlers
   const handleSaveProduct = (updatedProduct: Product) => {
-    // Unmark from deleted IDs in case a previously deleted ID is recreated
-    unmarkProductIdDeleted(updatedProduct.id);
-
     setProducts((prev) => {
       const idx = prev.findIndex((p) => p.id === updatedProduct.id);
       let next: Product[];
@@ -621,10 +570,7 @@ export default function App() {
   };
 
   const handleDeleteProduct = (productId: string) => {
-    // 1. Mark as permanently deleted to prevent restoration from cache or snapshots
-    markProductIdDeleted(productId);
-
-    // 2. Immediately remove from product catalog state (triggers instant synchronous re-render)
+    // Immediately remove from product catalog state (triggers instant synchronous re-render)
     setProducts((prev) => {
       const updated = prev.filter((p) => p.id !== productId);
       try {
