@@ -591,8 +591,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     <Truck className="w-3.5 h-3.5 text-amber-700" />
                     Delivery Charges:
                   </span>
-                  <span className={`font-bold ${deliveryFee === 0 ? "text-emerald-700" : "text-amber-950"}`}>
-                    {deliveryFee === 0 ? "FREE" : `Rs. ${deliveryFee}`}
+                  <span className="font-bold text-amber-950">
+                    Rs. {deliveryFee}
                   </span>
                 </div>
                 {promoDiscount > 0 && (
@@ -690,8 +690,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     <Truck className="w-3.5 h-3.5 text-amber-700" />
                     Delivery Charges:
                   </span>
-                  <span className={`font-bold ${deliveryFee === 0 ? "text-emerald-700" : "text-amber-950"}`}>
-                    {deliveryFee === 0 ? "FREE" : `Rs. ${deliveryFee}`}
+                  <span className="font-bold text-amber-950">
+                    Rs. {deliveryFee}
                   </span>
                 </div>
                 {promoDiscount > 0 && (
@@ -762,8 +762,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
               <div className="pt-2 flex justify-center gap-3">
                 <button
+                  onClick={() => window.print()}
+                  className="px-6 py-2 bg-stone-200 hover:bg-stone-300 text-stone-800 font-bold rounded-xl cursor-pointer text-xs flex items-center gap-2 print:hidden"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                  Print Receipt
+                </button>
+                <button
                   onClick={onClose}
-                  className="px-6 py-2 bg-amber-900 hover:bg-amber-800 text-white font-bold rounded-xl cursor-pointer text-xs"
+                  className="px-6 py-2 bg-amber-900 hover:bg-amber-800 text-white font-bold rounded-xl cursor-pointer text-xs print:hidden"
                 >
                   Return to Store
                 </button>

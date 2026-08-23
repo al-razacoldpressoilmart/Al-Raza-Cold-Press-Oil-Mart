@@ -541,31 +541,6 @@ export default function App() {
     setCartItems([]);
     setAppliedPromo(null);
     showToast("Order Placed Successfully!", `Tracking ID: ${orderPayload.orderId || ''}`);
-
-    // Construct and trigger WhatsApp message for the owner
-    const orderId = orderPayload.orderId || `AR-${Date.now()}`;
-    const cleanNumber = (storeConfig.whatsappNumber || "923292832225").replace(/[^0-9]/g, "");
-    
-    const itemsText = (orderPayload.items || [])
-      .map((it: any) => {
-        const size = it.product?.sizes?.[it.selectedSizeIndex]?.size || "500ml";
-        return `• ${it.product?.name || "Product"} (${size}) x ${it.quantity}`;
-      })
-      .join("\n");
-      
-    let message = `🌿 *NEW ORDER PLACED at ${storeConfig.brandName}*\n\n` +
-      `*Tracking ID:* ${orderId}\n` +
-      `*Customer:* ${orderPayload.customerName}\n` +
-      `*Phone:* ${orderPayload.customerPhone}\n` +
-      `*Address:* ${orderPayload.deliveryAddress}\n\n` +
-      `*Order Details:*\n${itemsText}\n\n` +
-      `*Total Amount:* Rs. ${orderPayload.totalAmount}\n` +
-      `*Payment Method:* ${orderPayload.paymentMethod || "Cash on Delivery"}\n\n` + 
-      `Hello! I have just placed this order. Please confirm and process it.`;
-
-    const whatsappUrl = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
-    // Automatically trigger WhatsApp URL to ensure instant notification
-    window.open(whatsappUrl, "_blank");
   };
 
   // Review Submissions and Moderation

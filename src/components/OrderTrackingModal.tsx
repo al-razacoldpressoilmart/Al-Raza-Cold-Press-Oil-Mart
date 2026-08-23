@@ -492,8 +492,8 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                         <Truck className="w-3.5 h-3.5 text-amber-400" />
                         Delivery Charges:
                       </span>
-                      <span className={`font-mono font-bold ${(selectedOrder.deliveryFee ?? 0) === 0 ? "text-emerald-400" : "text-white"}`}>
-                        {(selectedOrder.deliveryFee ?? 0) === 0 ? "FREE" : `Rs. ${selectedOrder.deliveryFee}`}
+                      <span className="font-mono font-bold text-white">
+                        Rs. {selectedOrder.deliveryFee}
                       </span>
                     </div>
 
@@ -541,13 +541,21 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                   </p>
                 </div>
 
+                <button
+                  onClick={() => window.print()}
+                  className="px-4 py-2.5 bg-stone-300 hover:bg-stone-200 text-stone-900 text-xs font-bold rounded-xl flex items-center gap-1.5 shadow transition-all cursor-pointer print:hidden"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                  <span>Print Receipt</span>
+                </button>
+
                 <a
                   href={`https://wa.me/${(storeConfig.whatsappNumber || "").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
                     `Salam Al Raza Oil Mart! 🌿\n\nI am inquiring about the live tracking status of my Order:\n\n*Order ID:* ${selectedOrder.orderId}\n*Customer:* ${selectedOrder.customerName}\n*Phone:* ${selectedOrder.customerPhone}\n*Total Amount:* Rs. ${selectedOrder.totalAmount}\n\nPlease share the latest dispatch/delivery update!`
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow transition-all cursor-pointer"
+                  className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow transition-all cursor-pointer print:hidden"
                 >
                   <MessageCircle className="w-4 h-4" />
                   <span>Chat on WhatsApp</span>

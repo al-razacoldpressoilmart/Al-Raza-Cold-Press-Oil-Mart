@@ -231,12 +231,40 @@ app.post("/api/orders", async (req, res) => {
 
     // 2. Send Email Notification to Store Owner
     const ownerEmail = "muhammad.farhan.04.208@gmail.com";
+    
+    // Robust, templated HTML Order Confirmation Email
     const emailHtml = `
-      <h3>New Order Received at Al Raza Mart</h3>
-      <p><strong>Tracking ID:</strong> ${orderData.orderId}</p>
-      <p><strong>Customer:</strong> ${orderData.customerName} (${orderData.customerPhone})</p>
-      <p><strong>Total:</strong> Rs. ${orderData.totalAmount}</p>
-      <p><strong>Items:</strong> ${orderData.itemsSummary}</p>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #ddd;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #2c3e50; margin: 0;">Al Raza Cold Pressed Oils</h2>
+          <p style="color: #27ae60; font-weight: bold; margin-top: 5px;">New Order Received</p>
+        </div>
+        
+        <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid #eee;">
+          <h3 style="color: #333; margin-top: 0; border-bottom: 2px solid #27ae60; padding-bottom: 10px;">Order Details</h3>
+          <p><strong>Tracking ID:</strong> <span style="color: #e67e22; font-family: monospace; font-size: 1.1em;">${orderData.orderId}</span></p>
+          <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+          <p><strong>Total Amount:</strong> <span style="font-weight: bold; color: #27ae60;">Rs. ${orderData.totalAmount}</span></p>
+          <p><strong>Payment Method:</strong> ${orderData.paymentMethod || "Cash on Delivery"}</p>
+        </div>
+
+        <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid #eee; margin-top: 15px;">
+          <h3 style="color: #333; margin-top: 0; border-bottom: 2px solid #27ae60; padding-bottom: 10px;">Customer Information</h3>
+          <p><strong>Name:</strong> ${orderData.customerName}</p>
+          <p><strong>Phone:</strong> ${orderData.customerPhone}</p>
+          <p><strong>Email:</strong> ${orderData.customerEmail || "Not Provided"}</p>
+          <p><strong>Delivery Address:</strong> ${orderData.deliveryAddress}</p>
+        </div>
+
+        <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid #eee; margin-top: 15px;">
+          <h3 style="color: #333; margin-top: 0; border-bottom: 2px solid #27ae60; padding-bottom: 10px;">Items Ordered</h3>
+          <pre style="font-family: inherit; white-space: pre-wrap; background: #f8f8f8; padding: 10px; border-radius: 5px;">${orderData.itemsSummary}</pre>
+        </div>
+
+        <div style="text-align: center; margin-top: 25px; color: #7f8c8d; font-size: 0.9em;">
+          <p>This is an automated notification from the Al Raza Mart Server.</p>
+        </div>
+      </div>
     `;
 
     if (emailTransporter) {
@@ -254,6 +282,23 @@ app.post("/api/orders", async (req, res) => {
     } else {
       console.log(`[Email Mock] Email to ${ownerEmail}:`, emailHtml);
       console.log("Note: SMTP_USER and SMTP_PASS missing in env. Simulated Email delivery. The client-side FormSubmit is still running as fallback.");
+    }
+
+    // 3. Instant Push Notification via Ntfy.sh (No Auth Required)
+    try {
+      // Use dynamic fetch to Ntfy
+      await fetch("https://ntfy.sh/alraza_coldpress_orders", {
+        method: "POST",
+        body: `Order ID: ${orderData.orderId}\nCustomer: ${orderData.customerName}\nAmount: Rs. ${orderData.totalAmount}\nItems: ${orderData.itemsSummary || "View details in panel"}`,
+        headers: {
+          "Title": "New Order on Al Raza Mart!",
+          "Tags": "moneybag,green_salad,bell",
+          "Priority": "high"
+        }
+      });
+      console.log("Ntfy push notification sent!");
+    } catch (e) {
+      console.error("Ntfy push failed", e);
     }
 
     res.json({ success: true, message: "Order processed and notifications triggered successfully." });
