@@ -221,7 +221,7 @@ export const OwnerOrdersManager: React.FC<OwnerOrdersManagerProps> = ({
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
           <input
             type="text"
-            placeholder="Search by Order ID (e.g. AR-849201), Customer, Phone, or TID..."
+            placeholder="Search by Tracking ID (e.g. ARM-A9F3-4123), Customer, Phone, or TID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-4 py-2 bg-stone-950 border border-stone-800 rounded-xl text-xs text-white placeholder:text-stone-600 focus:outline-none focus:border-amber-500 font-mono"

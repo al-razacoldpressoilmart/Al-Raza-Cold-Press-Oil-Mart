@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { PRODUCTS } from "./data/products";
 import { Product, CartItem, ProductReview } from "./types";
 import { DEFAULT_STORE_CONFIG, StoreConfig } from "./data/storeConfig";
@@ -44,6 +44,11 @@ import {
 export default function App() {
   // Firebase User Authentication State
   const [user, setUser] = useState<User | null>(null);
+  const userRef = useRef<User | null>(null);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   // 1. Products state (Persisted in localStorage so owner modifications persist)
   const [products, setProducts] = useState<Product[]>(() => {
@@ -163,6 +168,36 @@ export default function App() {
 
   // Firebase Auth State Listener & Firestore Live Subscriptions
   useEffect(() => {
+    let originalWarn: any = null;
+    let originalError: any = null;
+
+    if (import.meta.env.DEV) {
+      originalWarn = console.warn;
+      originalError = console.error;
+      
+      console.warn = (msg: any, ...args: any[]) => {
+        if (typeof msg === 'string' && (
+          msg.includes('WebChannelConnection') || 
+          msg.includes('WebSocket closed') ||
+          msg.includes('RPC \'Listen\' stream') ||
+          msg.includes('transport errored')
+        )) {
+          return;
+        }
+        if (originalWarn) originalWarn(msg, ...args);
+      };
+      
+      console.error = (msg: any, ...args: any[]) => {
+        if (typeof msg === 'string' && (
+          msg.includes('WebSocket closed') || 
+          msg.includes('Unhandled Rejection')
+        )) {
+          return;
+        }
+        if (originalError) originalError(msg, ...args);
+      };
+    }
+
     const unsubAuth = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
     });
@@ -204,9 +239,28 @@ export default function App() {
       }
     });
 
+    let isFirstLoad = true;
+    const prevOrderIds = new Set<string>();
+
     const unsubOrders = subscribeOrders((remoteOrders) => {
       if (remoteOrders && remoteOrders.length > 0) {
+        // Detect new orders for admin notifications
+        if (!isFirstLoad && userRef.current) {
+          const newOrders = remoteOrders.filter(o => !prevOrderIds.has(o.id));
+          if (newOrders.length > 0) {
+            newOrders.forEach(no => {
+              // Ensure audio/visual toast is noticeable
+              showToast("🔔 New Order Received!", `Tracking ID: ${no.id} | Amount: Rs. ${no.totalAmount}`);
+            });
+          }
+        }
+        
+        // Update previous order IDs
+        prevOrderIds.clear();
+        remoteOrders.forEach(o => prevOrderIds.add(o.id));
+        
         setOrders(remoteOrders);
+        isFirstLoad = false;
       }
     });
 
@@ -216,6 +270,10 @@ export default function App() {
       unsubProducts();
       unsubReviews();
       unsubOrders();
+      if (import.meta.env.DEV) {
+        if (originalWarn) console.warn = originalWarn;
+        if (originalError) console.error = originalError;
+      }
     };
   }, []);
 
@@ -482,7 +540,32 @@ export default function App() {
 
     setCartItems([]);
     setAppliedPromo(null);
-    showToast("Order Placed Successfully!", `Order ID: ${orderPayload.orderId}`);
+    showToast("Order Placed Successfully!", `Tracking ID: ${orderPayload.orderId || ''}`);
+
+    // Construct and trigger WhatsApp message for the owner
+    const orderId = orderPayload.orderId || `AR-${Date.now()}`;
+    const cleanNumber = (storeConfig.whatsappNumber || "923292832225").replace(/[^0-9]/g, "");
+    
+    const itemsText = (orderPayload.items || [])
+      .map((it: any) => {
+        const size = it.product?.sizes?.[it.selectedSizeIndex]?.size || "500ml";
+        return `• ${it.product?.name || "Product"} (${size}) x ${it.quantity}`;
+      })
+      .join("\n");
+      
+    let message = `🌿 *NEW ORDER PLACED at ${storeConfig.brandName}*\n\n` +
+      `*Tracking ID:* ${orderId}\n` +
+      `*Customer:* ${orderPayload.customerName}\n` +
+      `*Phone:* ${orderPayload.customerPhone}\n` +
+      `*Address:* ${orderPayload.deliveryAddress}\n\n` +
+      `*Order Details:*\n${itemsText}\n\n` +
+      `*Total Amount:* Rs. ${orderPayload.totalAmount}\n` +
+      `*Payment Method:* ${orderPayload.paymentMethod || "Cash on Delivery"}\n\n` + 
+      `Hello! I have just placed this order. Please confirm and process it.`;
+
+    const whatsappUrl = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
+    // Automatically trigger WhatsApp URL to ensure instant notification
+    window.open(whatsappUrl, "_blank");
   };
 
   // Review Submissions and Moderation

@@ -3,6 +3,8 @@ import path from "path";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
+import twilio from "twilio";
+import nodemailer from "nodemailer";
 
 dotenv.config();
 
@@ -182,17 +184,79 @@ app.get("/api/batches", (_req, res) => {
   });
 });
 
+// Initialize Email & Twilio clients (Lazy loaded/guarded in case env vars are missing)
+let twilioClient: twilio.Twilio | null = null;
+if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+  twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+}
+
+let emailTransporter: nodemailer.Transporter | null = null;
+if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+  emailTransporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST || "smtp.gmail.com",
+    port: parseInt(process.env.SMTP_PORT || "587"),
+    secure: process.env.SMTP_SECURE === "true",
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+}
+
 // Create Order & Notify Store Owner
 app.post("/api/orders", async (req, res) => {
   try {
     const orderData = req.body;
     console.log("New Order Received:", orderData.orderId);
     
-    // We optionally perform a server-side notification trigger here
-    // Currently, the client fires a FormSubmit to tshirtsprintingworld@gmail.com
-    // To ensure delivery, we could also use node-fetch to formsubmit or a webhook
+    // 1. Send SMS Notification via Twilio to Store Owner
+    const ownerPhone = "03292832225";
+    const smsBody = `New Order: ${orderData.orderId}\nTotal: Rs.${orderData.totalAmount}\nCustomer: ${orderData.customerName}\nPhone: ${orderData.customerPhone}`;
+    
+    if (twilioClient && process.env.TWILIO_FROM_NUMBER) {
+      try {
+        await twilioClient.messages.create({
+          body: smsBody,
+          from: process.env.TWILIO_FROM_NUMBER,
+          to: ownerPhone
+        });
+        console.log("SMS notification sent to owner successfully.");
+      } catch (smsError) {
+        console.error("Failed to send Twilio SMS:", smsError);
+      }
+    } else {
+      console.log(`[Twilio Mock] SMS to ${ownerPhone}:`, smsBody);
+      console.log("Note: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, or TWILIO_FROM_NUMBER missing in env. Simulated SMS delivery.");
+    }
 
-    res.json({ success: true, message: "Order processed successfully." });
+    // 2. Send Email Notification to Store Owner
+    const ownerEmail = "muhammad.farhan.04.208@gmail.com";
+    const emailHtml = `
+      <h3>New Order Received at Al Raza Mart</h3>
+      <p><strong>Tracking ID:</strong> ${orderData.orderId}</p>
+      <p><strong>Customer:</strong> ${orderData.customerName} (${orderData.customerPhone})</p>
+      <p><strong>Total:</strong> Rs. ${orderData.totalAmount}</p>
+      <p><strong>Items:</strong> ${orderData.itemsSummary}</p>
+    `;
+
+    if (emailTransporter) {
+      try {
+        await emailTransporter.sendMail({
+          from: process.env.SMTP_USER,
+          to: ownerEmail,
+          subject: `New Order Received - ${orderData.orderId} - Al Raza Mart`,
+          html: emailHtml
+        });
+        console.log("Email notification sent successfully.");
+      } catch (emailErr) {
+        console.error("Failed to send Email:", emailErr);
+      }
+    } else {
+      console.log(`[Email Mock] Email to ${ownerEmail}:`, emailHtml);
+      console.log("Note: SMTP_USER and SMTP_PASS missing in env. Simulated Email delivery. The client-side FormSubmit is still running as fallback.");
+    }
+
+    res.json({ success: true, message: "Order processed and notifications triggered successfully." });
   } catch (error) {
     console.error("Order processing error:", error);
     res.status(500).json({ error: "Failed to process order." });
@@ -270,31 +334,6 @@ Keep formatting clean with clear markdown headings and bullet points.`;
       message: error.message,
     });
   }
-});
-
-// Order Placement API
-app.post("/api/orders", (req, res) => {
-  const { customerName, phone, email, address, items, paymentMethod, totalAmount, notes } = req.body;
-
-  if (!customerName || !phone || !items || items.length === 0) {
-    return res.status(400).json({ error: "Missing required order information." });
-  }
-
-  const orderId = "AR-" + Math.floor(100000 + Math.random() * 900000);
-  const estimatedDelivery = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "short",
-    day: "numeric",
-  });
-
-  res.json({
-    success: true,
-    orderId,
-    estimatedDelivery,
-    totalAmount,
-    customerName,
-    message: "Thank you for choosing 100% pure cold-pressed oils from Al Raza Mart!",
-  });
 });
 
 // Bulk & Mart Visit Inquiry API

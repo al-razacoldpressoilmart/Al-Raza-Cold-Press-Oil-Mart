@@ -124,7 +124,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
     const query = searchInput.trim().toUpperCase();
 
     if (!query) {
-      setErrorMessage("Please enter an Order ID (e.g. AR-123456) or your phone number.");
+      setErrorMessage("Please enter an Order Tracking ID (e.g. ARM-A9F3-4123) or your phone number.");
       return;
     }
 
@@ -259,7 +259,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
               <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-400" />
               <input
                 type="text"
-                placeholder="Enter Order ID (e.g. AR-849201) or Phone (e.g. 03001234567)..."
+                placeholder="Enter Tracking ID (e.g. ARM-A9F3-4123) or Phone..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="w-full bg-amber-950/80 border border-amber-700 rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm text-white placeholder-amber-500/80 focus:outline-none focus:border-amber-400 font-mono"

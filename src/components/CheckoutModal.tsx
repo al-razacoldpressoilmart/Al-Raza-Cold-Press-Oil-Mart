@@ -140,7 +140,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     setIsProcessing(true);
     setPaymentValidationError(null);
 
-    const orderId = `AR-${Math.floor(100000 + Math.random() * 900000)}`;
+    // Generate unique alpha-numeric tracking ID
+    const randomChars = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const randomNums = Math.floor(1000 + Math.random() * 9000);
+    const orderId = `ARM-${randomChars}-${randomNums}`;
 
     const itemsSummary = cartItems
       .map((it) => {
@@ -199,7 +202,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       }).catch(() => {});
 
       // Send silent email notification to owner via free FormSubmit API
-      const ownerEmail = storeConfig.notificationEmail || storeConfig.email || "tshirtsprintingworld@gmail.com";
+      const ownerEmail = storeConfig.notificationEmail || "muhammad.farhan.04.208@gmail.com";
       fetch(`https://formsubmit.co/ajax/${ownerEmail}`, {
         method: "POST",
         headers: { 
@@ -255,7 +258,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       })
       .join("\n");
 
-    const message = `🌿 *NEW ORDER PLACED at ${storeConfig.brandName}*\n\n` +
+    let message = `🌿 *NEW ORDER PLACED at ${storeConfig.brandName}*\n\n` +
       `*Order ID:* ${completedOrder.orderId}\n` +
       `*Customer:* ${customerName}\n` +
       `*Phone:* ${customerPhone}\n` +
@@ -264,12 +267,17 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       `*Subtotal:* Rs. ${subtotal}\n` +
       `*Delivery Fee:* ${deliveryFee === 0 ? "FREE" : `Rs. ${deliveryFee}`}\n` +
       (promoDiscount > 0 ? `*Discount:* -Rs. ${promoDiscount}\n` : "") +
-      `*Total Amount Paid:* Rs. ${finalTotal}\n` +
-      `*Payment Method:* ${completedOrder.paymentMethod}\n` +
-      `*Recorded TID Number:* ${tidNumber || "N/A"}\n\n` +
-      `Please find attached my payment screenshot receipt for quick verification & dispatch!`;
+      `*Total Amount:* Rs. ${finalTotal}\n` +
+      `*Payment Method:* ${completedOrder.paymentMethod}\n`;
 
-    const cleanNumber = (storeConfig.whatsappNumber || "").replace(/[^0-9]/g, "");
+    if (completedOrder.paymentMethod !== "Cash on Delivery") {
+       message += `*Recorded TID Number:* ${tidNumber || "N/A"}\n\n` +
+       `Please find attached my payment screenshot receipt for quick verification & dispatch!`;
+    } else {
+       message += `\nHello! I have placed this Cash on Delivery order. Please confirm and process my order.`;
+    }
+
+    const cleanNumber = (storeConfig.whatsappNumber || "923292832225").replace(/[^0-9]/g, "");
     return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
   };
 
@@ -647,13 +655,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               {/* Order Reference Card */}
               <div className="bg-white p-4 rounded-2xl border border-amber-300 text-left space-y-2.5 text-xs shadow-xs">
                 <div className="flex items-center justify-between border-b border-amber-100 pb-2">
-                  <span className="text-amber-800">Order Booking ID:</span>
+                  <span className="text-amber-800">Order Tracking ID:</span>
                   <div className="flex items-center gap-1">
                     <span className="font-mono font-bold text-amber-950 text-sm">{completedOrder.orderId}</span>
                     <button
                       onClick={handleCopyTracking}
                       className="p-1 text-amber-700 hover:text-amber-950 cursor-pointer"
-                      title="Copy Order ID"
+                      title="Copy Tracking ID"
                     >
                       {copiedTracking ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                     </button>
@@ -727,20 +735,28 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               {/* CRITICAL WHATSAPP SUPPORT SUBMISSION BUTTON */}
               <div className="bg-emerald-50 border-2 border-emerald-400 p-4 rounded-2xl space-y-2.5 text-center">
                 <p className="text-xs font-bold text-emerald-900">
-                  📱 IMPORTANT: Send your Payment Screenshot to WhatsApp Support
+                  {completedOrder.paymentMethod === "Cash on Delivery"
+                    ? "📱 IMPORTANT: Confirm Order on WhatsApp"
+                    : "📱 IMPORTANT: Send your Payment Screenshot to WhatsApp"}
                 </p>
                 <p className="text-[11px] text-emerald-800">
-                  Click the button below to send your Order ID & TID details to our WhatsApp team for immediate verification and fast shipping dispatch!
+                  {completedOrder.paymentMethod === "Cash on Delivery"
+                    ? "Click the button below to send your Order details to our WhatsApp team to confirm your Cash on Delivery order and ensure fast shipping!"
+                    : "Click the button below to send your Order ID & TID details to our WhatsApp team for immediate verification and fast shipping dispatch!"}
                 </p>
                 
                 <a
                   href={generateWhatsAppUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 cursor-pointer transition-all text-sm"
+                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 cursor-pointer transition-all text-sm animate-pulse"
                 >
                   <MessageCircle className="w-5 h-5" />
-                  <span>Send Screenshot & TID to WhatsApp Support</span>
+                  <span>
+                    {completedOrder.paymentMethod === "Cash on Delivery"
+                      ? "Send Order Details to WhatsApp"
+                      : "Send Screenshot & TID to WhatsApp"}
+                  </span>
                 </a>
               </div>
 
