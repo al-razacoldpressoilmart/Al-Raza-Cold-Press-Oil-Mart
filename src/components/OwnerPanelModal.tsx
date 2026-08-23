@@ -636,7 +636,7 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                 }`}
               >
                 <TrendingUp className="w-4 h-4" />
-                <span>Visual Dashboard</span>
+                <span>Dashboard</span>
               </button>
 
               <button

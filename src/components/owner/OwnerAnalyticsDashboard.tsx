@@ -1,8 +1,9 @@
 import React, { useMemo } from "react";
 import { 
   ResponsiveContainer, 
-  AreaChart, 
+  ComposedChart,
   Area, 
+  Line,
   BarChart, 
   Bar, 
   PieChart, 
@@ -250,7 +251,7 @@ export const OwnerAnalyticsDashboard: React.FC<OwnerAnalyticsDashboardProps> = (
             <DollarSign className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-[11px] text-amber-700 font-bold uppercase tracking-wider">Gross Revenue</p>
+            <p className="text-[11px] text-amber-700 font-bold uppercase tracking-wider">Total Revenue</p>
             <p className="text-xl font-serif font-bold text-amber-950 mt-0.5">Rs. {kpis.totalRevenue.toLocaleString()}</p>
             <p className={`text-[10px] font-semibold ${kpis.revenueGrowthPct >= 0 ? "text-emerald-700" : "text-rose-600"}`}>
               {kpis.revenueGrowthPct > 0 ? "+" : ""}{kpis.revenueGrowthPct.toFixed(1)}% vs prev 30d
@@ -307,11 +308,11 @@ export const OwnerAnalyticsDashboard: React.FC<OwnerAnalyticsDashboardProps> = (
                   {kpis.revenueGrowthPct > 0 ? "+" : ""}{kpis.revenueGrowthPct.toFixed(1)}% vs prev
                 </span>
               </div>
-              <p className="text-xs text-amber-800/70">30-Day Gross Revenue & Volume Performance</p>
+              <p className="text-xs text-amber-800/70">30-Day Total Revenue & Volume Performance</p>
             </div>
             <div className="flex items-center gap-4 text-xs font-semibold">
               <span className="flex items-center gap-1.5 text-amber-700">
-                <span className="w-3 h-3 rounded-full bg-amber-500" /> Revenue (₹)
+                <span className="w-3 h-3 rounded-full bg-amber-500" /> Revenue (Rs. )
               </span>
               <span className="flex items-center gap-1.5 text-emerald-700">
                 <span className="w-3 h-3 rounded-full bg-emerald-500" /> Orders
@@ -321,7 +322,7 @@ export const OwnerAnalyticsDashboard: React.FC<OwnerAnalyticsDashboardProps> = (
 
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={orderTrendsData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+              <ComposedChart data={orderTrendsData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#d97706" stopOpacity={0.4} />
@@ -330,15 +331,17 @@ export const OwnerAnalyticsDashboard: React.FC<OwnerAnalyticsDashboardProps> = (
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#fef3c7" vertical={false} />
                 <XAxis dataKey="day" stroke="#78350f" fontSize={11} />
-                <YAxis stroke="#78350f" fontSize={11} tickFormatter={(val) => `₹${val / 1000}k`} />
+                <YAxis yAxisId="left" stroke="#78350f" fontSize={11} tickFormatter={(val) => `Rs. ${val / 1000}k`} />
+                <YAxis yAxisId="right" orientation="right" stroke="#10b981" fontSize={11} />
                 <Tooltip 
                   formatter={(value: any, name: any) => [
-                    name === "revenue" ? `₹${Number(value).toLocaleString()}` : `${value} orders`,
-                    name === "revenue" ? "Revenue" : "Orders Count"
+                    name === "revenue" ? `Rs. ${Number(value).toLocaleString()}` : `${value} orders`,
+                    name === "revenue" ? "Total Revenue" : "Order Volume"
                   ]}
                   contentStyle={{ backgroundColor: "#291305", color: "#fef3c7", borderRadius: "10px", fontSize: "12px" }}
                 />
                 <Area 
+                  yAxisId="left"
                   type="monotone" 
                   dataKey="revenue" 
                   stroke="#b45309" 
@@ -346,7 +349,16 @@ export const OwnerAnalyticsDashboard: React.FC<OwnerAnalyticsDashboardProps> = (
                   fillOpacity={1} 
                   fill="url(#colorRevenue)" 
                 />
-              </AreaChart>
+                <Line
+                  yAxisId="right"
+                  type="monotone"
+                  dataKey="orders"
+                  stroke="#10b981"
+                  strokeWidth={2.5}
+                  dot={{ r: 3, fill: "#10b981" }}
+                  activeDot={{ r: 5 }}
+                />
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
         </div>

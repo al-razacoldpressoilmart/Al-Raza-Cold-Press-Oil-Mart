@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import confetti from "canvas-confetti";
 import { 
   X, 
@@ -68,6 +68,26 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [copiedTracking, setCopiedTracking] = useState(false);
   const [copiedAccountNo, setCopiedAccountNo] = useState(false);
   const [paymentValidationError, setPaymentValidationError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setStep("details");
+      setCustomerName("");
+      setCustomerPhone("");
+      setCustomerEmail("");
+      setAddress("");
+      setCity("");
+      setPincode("");
+      setDeliveryNotes("");
+      setTidNumber("");
+      setScreenshotFile(null);
+      setScreenshotFileName("");
+      setCompletedOrder(null);
+      setPaymentValidationError(null);
+      setSelectedMethodId(activePaymentMethods[0]?.id || "easypaisa");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
