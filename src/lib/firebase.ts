@@ -14,16 +14,20 @@ import {
   query,
   where,
   orderBy,
-  limit
+  limit,
+  setLogLevel
 } from "firebase/firestore";
 import firebaseConfig from "../../firebase-applet-config.json";
 
 // Initialize Firebase App
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// CRITICAL: Initialize Firestore with explicit database ID and long polling to prevent WSS drops
+// Suppress noisy WebChannelConnection and WebSocket transport warnings
+setLogLevel("error");
+
+// CRITICAL: Initialize Firestore with explicit database ID and long polling auto-detect
 export const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true
+  experimentalAutoDetectLongPolling: true
 }, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();

@@ -21,6 +21,7 @@ import { AffiliateModal } from "./components/AffiliateModal";
 import { OrderTrackingModal } from "./components/OrderTrackingModal";
 import { FloatingWhatsAppButton } from "./components/FloatingWhatsAppButton";
 import { AuthModal } from "./components/AuthModal";
+import { NotificationManager } from "./utils/NotificationManager";
 import { CheckCircle2, Shield, Settings, Sparkles, X } from "lucide-react";
 import { auth, logOutUser } from "./lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
@@ -200,6 +201,10 @@ export default function App() {
 
     const unsubAuth = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      if (currentUser) {
+        // Request desktop notification permission so the owner gets alerts for new orders
+        NotificationManager.requestPermission();
+      }
     });
 
     const unsubConfig = subscribeStoreConfig((remoteConfig) => {
@@ -251,6 +256,12 @@ export default function App() {
             newOrders.forEach(no => {
               // Ensure audio/visual toast is noticeable
               showToast("🔔 New Order Received!", `Tracking ID: ${no.id} | Amount: Rs. ${no.totalAmount}`);
+              
+              // Trigger desktop notification
+              NotificationManager.notify("New Order Received!", {
+                body: `Order ID: ${no.id}\nAmount: Rs. ${no.totalAmount}\nCustomer: ${no.customerName || "Customer"}`,
+                tag: "new_order_" + no.id
+              });
             });
           }
         }
