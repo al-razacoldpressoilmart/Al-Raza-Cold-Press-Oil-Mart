@@ -58,12 +58,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   const hasFreeShip = storeConfig.enableFreeDeliveryAboveThreshold ?? true;
 
   const navLinks = [
-    { id: "products", label: "Pure Oils Catalog" },
-    { id: "process", label: "Cold Press Extraction" },
-    { id: "recipes", label: "Traditional Recipes" },
-    { id: "mart-visit", label: "Visit Mart & Location" },
-    ...(onOpenOrderTracking ? [{ id: "tracking", label: "Track Order", action: onOpenOrderTracking }] : []),
-    ...(onOpenAffiliate ? [{ id: "affiliate", label: `Affiliate & Earn ${affRate}%`, action: onOpenAffiliate }] : []),
+    { id: "products", label: "Pure Oils / پروڈکٹس" },
+    { id: "order-form", label: "⚡ فوری آرڈر فارم (Quick Order)" },
+    { id: "reviews", label: "Reviews / تاثرات" },
+    ...(onOpenOrderTracking ? [{ id: "tracking", label: "Track Order / ٹریک کریں", action: onOpenOrderTracking }] : []),
   ];
 
   const handleNavClick = (link: { id: string; label: string; action?: () => void }) => {
@@ -117,16 +115,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <Truck className="w-3.5 h-3.5 text-amber-400" />
                 <span>Track Order</span>
-              </button>
-            )}
-            {onOpenAffiliate && (
-              <button
-                id="top-affiliate-program-btn"
-                onClick={onOpenAffiliate}
-                className="inline-flex items-center gap-1 text-emerald-300 hover:text-white font-medium transition-colors cursor-pointer"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Earn {affRate}% (Affiliate)</span>
               </button>
             )}
             <a
@@ -195,52 +183,38 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-1 text-sm font-medium">
+          <nav className="hidden lg:flex items-center gap-1.5 text-sm font-medium">
             <button
               id="nav-products-btn"
               onClick={() => scrollToSection("products")}
-              className="px-3.5 py-2 rounded-lg transition-all cursor-pointer font-medium"
+              className="px-3.5 py-2 rounded-lg transition-all cursor-pointer font-medium hover:bg-white/10 text-white"
               style={{
-                backgroundColor: activeSection === "products" ? "var(--theme-primary, #b45309)" : "transparent",
-                color: "#ffffff"
+                backgroundColor: activeSection === "products" ? "var(--theme-primary, #15803d)" : "transparent",
               }}
             >
-              Pure Oils
+              Pure Oils / پروڈکٹس
             </button>
             <button
-              id="nav-process-btn"
-              onClick={() => scrollToSection("process")}
-              className="px-3.5 py-2 rounded-lg transition-all cursor-pointer font-medium"
-              style={{
-                backgroundColor: activeSection === "process" ? "var(--theme-primary, #b45309)" : "transparent",
-                color: "#ffffff"
-              }}
+              id="nav-order-form-btn"
+              onClick={() => scrollToSection("order-form")}
+              className="px-3.5 py-2 rounded-lg transition-all cursor-pointer font-bold bg-amber-500 hover:bg-amber-600 text-stone-950 shadow-xs flex items-center gap-1"
             >
-              Extraction Process
+              <span>⚡ فوری آرڈر فارم (Quick Order)</span>
             </button>
             <button
-              id="nav-recipes-btn"
-              onClick={() => scrollToSection("recipes")}
-              className="px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer hover:bg-white/10 text-white"
+              id="nav-reviews-btn"
+              onClick={() => scrollToSection("reviews")}
+              className="px-3.5 py-2 rounded-lg transition-all cursor-pointer font-medium hover:bg-white/10 text-white"
             >
-              <BookOpen className="w-4 h-4" style={{ color: "var(--theme-accent, #f59e0b)" }} />
-              <span>Recipes</span>
-            </button>
-            <button
-              id="nav-visit-btn"
-              onClick={() => scrollToSection("mart-visit")}
-              className="px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer hover:bg-white/10 text-white"
-            >
-              <MapPin className="w-4 h-4" style={{ color: "var(--theme-accent, #f59e0b)" }} />
-              <span>Visit Mart</span>
+              Customer Reviews
             </button>
             {onOpenOrderTracking && (
               <button
                 id="nav-track-order-btn"
                 onClick={onOpenOrderTracking}
-                className="px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer hover:bg-amber-800/60 text-amber-200 hover:text-white border border-amber-500/30 font-medium"
+                className="px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer hover:bg-white/10 text-stone-200 hover:text-white border border-white/20 font-medium"
               >
-                <Truck className="w-4 h-4 text-amber-400" />
+                <Truck className="w-4 h-4 text-emerald-400" />
                 <span>Track Order</span>
               </button>
             )}

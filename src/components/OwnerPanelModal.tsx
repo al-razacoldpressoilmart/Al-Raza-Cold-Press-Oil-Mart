@@ -43,11 +43,10 @@ import {
   Tag,
   FileText
 } from "lucide-react";
-import { Product, ProductReview } from "../types";
+import { Product, ProductReview, AffiliatePartner } from "../types";
 import { COLOR_THEMES, ColorTheme } from "../data/themes";
 import { StoreConfig, PaymentMethodConfig } from "../data/storeConfig";
 import { ASSETS } from "../assets/images";
-import { AffiliatePartner } from "./AffiliateModal";
 import { OwnerAnalyticsDashboard } from "./owner/OwnerAnalyticsDashboard";
 import { OwnerInventoryManager } from "./owner/OwnerInventoryManager";
 import { OwnerReviewsModeration } from "./owner/OwnerReviewsModeration";

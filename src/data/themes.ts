@@ -20,11 +20,30 @@ export interface ColorTheme {
 
 export const COLOR_THEMES: ColorTheme[] = [
   // ==========================================
-  // SECTION 0: OBSIDIAN & ROYAL LUXURY BLACK (DEFAULT)
+  // SECTION 0: WORDPRESS CLEAN & MINIMALIST (DEFAULT)
   // ==========================================
   {
+    id: "wordpress-clean",
+    name: "00. WordPress Clean Store (White & Emerald)",
+    category: "Pure & Minimalist White",
+    description: "Classic clean WordPress / WooCommerce layout with crisp white background, clear typography, and emerald green actions",
+    primary: "#15803d",
+    primaryDark: "#166534",
+    primaryLight: "#f0fdf4",
+    accent: "#16a34a",
+    bgMain: "#f8fafc",
+    bgSecondary: "#ffffff",
+    bgCard: "#ffffff",
+    headerBg: "#0f172a",
+    textColor: "#0f172a",
+    textMuted: "#475569",
+    border: "#e2e8f0",
+    badgeBg: "#15803d",
+    previewColors: ["#15803d", "#16a34a", "#ffffff"],
+  },
+  {
     id: "obsidian-luxury-black",
-    name: "01. Obsidian Luxury Pure Black (Default)",
+    name: "01. Obsidian Luxury Pure Black",
     category: "Royal & Luxury",
     description: "Premium pitch black aesthetic with deep obsidian tones, elegant gold accents, and crystal clear contrast",
     primary: "#18181b",

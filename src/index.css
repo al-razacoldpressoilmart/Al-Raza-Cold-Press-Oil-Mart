@@ -1,18 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --theme-primary: #18181b;
-  --theme-primary-dark: #000000;
-  --theme-primary-light: #27272a;
-  --theme-accent: #d4af37;
-  --theme-bg-main: #09090b;
-  --theme-bg-secondary: #121215;
-  --theme-bg-card: #18181b;
-  --theme-header-bg: #000000;
-  --theme-text: #f4f4f5;
-  --theme-text-muted: #a1a1aa;
-  --theme-border: #27272a;
-  --theme-badge-bg: #27272a;
+  --theme-primary: #15803d;
+  --theme-primary-dark: #166534;
+  --theme-primary-light: #f0fdf4;
+  --theme-accent: #16a34a;
+  --theme-bg-main: #f8fafc;
+  --theme-bg-secondary: #ffffff;
+  --theme-bg-card: #ffffff;
+  --theme-header-bg: #0f172a;
+  --theme-text: #0f172a;
+  --theme-text-muted: #475569;
+  --theme-border: #e2e8f0;
+  --theme-badge-bg: #15803d;
 }
 
 body {
@@ -180,3 +180,4 @@ body {
 .animate-fadeIn {
   animation: fadeInModal 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+@keyframes shimmer { 0% { transform: translateX(-100%) skewX(12deg); } 100% { transform: translateX(200%) skewX(12deg); } } .animate-shimmer { animation: shimmer 2.5s infinite; }

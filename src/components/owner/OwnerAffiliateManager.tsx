@@ -21,7 +21,7 @@ import {
   RefreshCw
 } from "lucide-react";
 import { StoreConfig } from "../../data/storeConfig";
-import { AffiliatePartner } from "../AffiliateModal";
+import { AffiliatePartner } from "../../types";
 
 interface OwnerAffiliateManagerProps {
   storeConfig: StoreConfig;

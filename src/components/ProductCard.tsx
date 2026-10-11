@@ -15,12 +15,14 @@ interface ProductCardProps {
   product: Product;
   onAddToCart: (product: Product, sizeIndex: number, quantity: number) => void;
   onQuickView: (product: Product) => void;
+  onBuyNow?: (product: Product, sizeIndex: number) => void;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   onAddToCart,
   onQuickView,
+  onBuyNow,
 }) => {
   const [selectedSizeIndex, setSelectedSizeIndex] = useState(0);
   const [isAdded, setIsAdded] = useState(false);
@@ -264,42 +266,58 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             </p>
           </div>
 
-          <button
-            id={`add-to-cart-${product.id}`}
-            disabled={isOutOfStock}
-            onClick={handleAdd}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm ${
-              isOutOfStock
-                ? "bg-stone-300 text-stone-500 cursor-not-allowed border border-stone-300"
-                : isAdded
-                ? "bg-emerald-700 text-white cursor-pointer"
-                : "text-white cursor-pointer hover:shadow-md active:scale-95"
-            }`}
-            style={{
-              backgroundColor: isOutOfStock
-                ? undefined
-                : isAdded
-                ? "#047857"
-                : "var(--theme-primary, #b45309)",
-            }}
-          >
-            {isOutOfStock ? (
-              <>
-                <PackageX className="w-3.5 h-3.5" />
-                <span>Sold Out</span>
-              </>
-            ) : isAdded ? (
-              <>
-                <Check className="w-3.5 h-3.5" />
-                <span>Added!</span>
-              </>
-            ) : (
-              <>
-                <ShoppingBag className="w-3.5 h-3.5" />
-                <span>Add to Cart</span>
-              </>
+          <div className="flex items-center gap-1.5">
+            {onBuyNow && !isOutOfStock && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onBuyNow(product, selectedSizeIndex);
+                }}
+                className="px-2.5 py-2 rounded-xl text-[11px] font-bold bg-amber-500 hover:bg-amber-600 text-stone-950 transition-all flex items-center gap-1 shadow-xs hover:shadow-md active:scale-95 cursor-pointer whitespace-nowrap"
+                title="فوری آرڈر فارم کھولیں (Quick Order)"
+              >
+                <span>⚡ فوری آرڈر</span>
+              </button>
             )}
-          </button>
+
+            <button
+              id={`add-to-cart-${product.id}`}
+              disabled={isOutOfStock}
+              onClick={handleAdd}
+              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-sm whitespace-nowrap ${
+                isOutOfStock
+                  ? "bg-stone-300 text-stone-500 cursor-not-allowed border border-stone-300"
+                  : isAdded
+                  ? "bg-emerald-700 text-white cursor-pointer"
+                  : "text-white cursor-pointer hover:shadow-md active:scale-95"
+              }`}
+              style={{
+                backgroundColor: isOutOfStock
+                  ? undefined
+                  : isAdded
+                  ? "#047857"
+                  : "var(--theme-primary, #15803d)",
+              }}
+            >
+              {isOutOfStock ? (
+                <>
+                  <PackageX className="w-3.5 h-3.5" />
+                  <span>Sold Out</span>
+                </>
+              ) : isAdded ? (
+                <>
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Added!</span>
+                </>
+              ) : (
+                <>
+                  <ShoppingBag className="w-3.5 h-3.5" />
+                  <span>Add to Cart</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
       </div>

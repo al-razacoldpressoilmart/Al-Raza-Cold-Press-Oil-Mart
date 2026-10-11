@@ -12,16 +12,14 @@ import {
   MessageCircle,
   Copy,
   Check,
-  Upload,
-  Image as ImageIcon,
-  AlertCircle,
-  Phone,
-  FileCheck,
-  PackageCheck
+  PackageCheck,
+  MapPin,
+  User,
+  Phone
 } from "lucide-react";
 import { CartItem } from "../types";
-import { StoreConfig, PaymentMethodConfig } from "../data/storeConfig";
-import { compressImageFile } from "../utils/imageCompressor";
+import { StoreConfig } from "../data/storeConfig";
+import { NotificationManager } from "../utils/NotificationManager";
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -34,6 +32,25 @@ interface CheckoutModalProps {
   appliedPromo?: string | null;
 }
 
+const PAKISTAN_CITIES = [
+  "Lahore",
+  "Karachi",
+  "Islamabad",
+  "Rawalpindi",
+  "Faisalabad",
+  "Multan",
+  "Peshawar",
+  "Quetta",
+  "Gujranwala",
+  "Sialkot",
+  "Hyderabad",
+  "Bahawalpur",
+  "Sargodha",
+  "Abbottabad",
+  "Sukkur",
+  "Other City"
+];
+
 export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   isOpen,
   onClose,
@@ -44,62 +61,55 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   onOpenOrderTracking,
   appliedPromo,
 }) => {
-  const [step, setStep] = useState<"details" | "payment" | "success">("details");
+  const [isSuccess, setIsSuccess] = useState(false);
   
   // Customer details state
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
-  const [customerEmail, setCustomerEmail] = useState("");
   const [address, setAddress] = useState("");
-  const [city, setCity] = useState("");
-  const [pincode, setPincode] = useState("");
+  const [city, setCity] = useState("Lahore");
+  const [customCity, setCustomCity] = useState("");
   const [deliveryNotes, setDeliveryNotes] = useState("");
 
-  // Payment state
+  // Payment method: Cash on delivery is primary default in WordPress
   const activePaymentMethods = storeConfig.paymentMethods.filter((pm) => pm.active);
-  const [selectedMethodId, setSelectedMethodId] = useState<string>(
-    activePaymentMethods[0]?.id || "easypaisa"
-  );
+  const defaultMethod = activePaymentMethods.find((p) => p.id === "cod") || activePaymentMethods[0] || {
+    id: "cod",
+    name: "Cash on Delivery",
+    instructions: "Pay when parcel arrives"
+  };
+
+  const [selectedMethodId, setSelectedMethodId] = useState<string>(defaultMethod.id);
   const [tidNumber, setTidNumber] = useState("");
-  const [screenshotFile, setScreenshotFile] = useState<string | null>(null);
-  const [screenshotFileName, setScreenshotFileName] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<any>(null);
   const [copiedTracking, setCopiedTracking] = useState(false);
-  const [copiedAccountNo, setCopiedAccountNo] = useState(false);
-  const [paymentValidationError, setPaymentValidationError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
-      setStep("details");
+      setIsSuccess(false);
       setCustomerName("");
       setCustomerPhone("");
-      setCustomerEmail("");
       setAddress("");
-      setCity("");
-      setPincode("");
+      setCity("Lahore");
+      setCustomCity("");
       setDeliveryNotes("");
       setTidNumber("");
-      setScreenshotFile(null);
-      setScreenshotFileName("");
       setCompletedOrder(null);
-      setPaymentValidationError(null);
-      setSelectedMethodId(activePaymentMethods[0]?.id || "easypaisa");
+      const codOption = activePaymentMethods.find((p) => p.id === "cod");
+      setSelectedMethodId(codOption ? "cod" : activePaymentMethods[0]?.id || "cod");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const currentPaymentMethod = activePaymentMethods.find((pm) => pm.id === selectedMethodId) || activePaymentMethods[0];
-  const requiresProof = currentPaymentMethod?.requiresProof !== false;
+  const currentPaymentMethod = activePaymentMethods.find((pm) => pm.id === selectedMethodId) || defaultMethod;
 
   const subtotal = cartItems.reduce((sum, item) => {
     const sizeOpt = item.product.sizes[item.selectedSizeIndex] || item.product.sizes[0];
-    return sum + sizeOpt.price * item.quantity;
+    return sum + (sizeOpt?.price || 0) * item.quantity;
   }, 0);
 
-  // Dynamic delivery charge calculation from store owner settings
   const freeDeliveryThreshold = storeConfig.freeDeliveryThreshold ?? 2500;
   const isFreeDelivery = Boolean(storeConfig.enableFreeDeliveryAboveThreshold && subtotal >= freeDeliveryThreshold);
   const deliveryFee = isFreeDelivery || subtotal === 0 ? 0 : (storeConfig.deliveryFee ?? 150);
@@ -108,151 +118,70 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const triggerConfetti = () => {
     try {
       confetti({
-        particleCount: 100,
+        particleCount: 90,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ["#b45309", "#d97706", "#059669", "#fbbf24"],
+        colors: ["#16a34a", "#22c55e", "#d97706", "#f59e0b"],
       });
     } catch (e) {
       console.log("Confetti trigger:", e);
     }
   };
 
-  const handleDetailsSubmit = (e: React.FormEvent) => {
+  const handlePlaceOrder = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customerName || !customerPhone || !address) return;
-    setStep("payment");
-  };
+    if (isProcessing) return;
 
-  // Image Upload Handler for Payment Screenshot (compressed < 80KB)
-  const handleScreenshotUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setScreenshotFileName(file.name);
-      try {
-        const compressed = await compressImageFile(file, { maxWidth: 900, maxHeight: 900, quality: 0.72 });
-        setScreenshotFile(compressed);
-        setPaymentValidationError(null);
-      } catch {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setScreenshotFile(reader.result as string);
-          setPaymentValidationError(null);
-        };
-        reader.readAsDataURL(file);
-      }
-    }
-  };
-
-  const handlePlaceOrder = async () => {
-    // Validation check: if online payment, must have TID & Screenshot
-    if (requiresProof) {
-      if (!tidNumber.trim()) {
-        setPaymentValidationError("Please enter your Transaction ID (TID) number from your payment receipt.");
-        return;
-      }
-      if (!screenshotFile) {
-        setPaymentValidationError("Please upload or attach your payment screenshot receipt before placing order.");
-        return;
-      }
+    if (!customerName.trim() || !customerPhone.trim() || !address.trim()) {
+      alert("Please fill in your Name, Phone Number, and Delivery Address.");
+      return;
     }
 
     setIsProcessing(true);
-    setPaymentValidationError(null);
 
-    // Generate unique alpha-numeric tracking ID
-    const randomChars = Math.random().toString(36).substring(2, 6).toUpperCase();
-    const randomNums = Math.floor(1000 + Math.random() * 9000);
-    const orderId = `ARM-${randomChars}-${randomNums}`;
-
-    const itemsSummary = cartItems
-      .map((it) => {
-        const sizeOpt = it.product.sizes[it.selectedSizeIndex] || it.product.sizes[0];
-        return `${it.product.name} (${sizeOpt.size}) x${it.quantity}`;
-      })
-      .join(", ");
+    const effectiveCity = city === "Other City" ? customCity || "Pakistan" : city;
+    const orderId = `AR-${Date.now().toString().slice(-6)}`;
+    const fullAddress = `${address.trim()}, ${effectiveCity}`;
 
     const orderPayload = {
-      id: orderId,
       orderId,
-      customerName,
-      customerPhone,
-      customerEmail,
-      shippingAddress: `${address}, ${city || storeConfig.city || "Pakistan"} ${pincode ? `- ${pincode}` : ""}`,
-      deliveryAddress: `${address}, ${city || storeConfig.city || "Pakistan"} ${pincode ? `- ${pincode}` : ""}`,
-      city: city || storeConfig.city || "Pakistan",
-      items: cartItems.map((it) => ({
-        productId: it.product.id,
-        name: it.product.name,
-        size: it.product.sizes[it.selectedSizeIndex]?.size || "500ml",
-        price: it.product.sizes[it.selectedSizeIndex]?.price || 0,
-        quantity: it.quantity,
-      })),
-      itemsSummary,
+      customerName: customerName.trim(),
+      customerPhone: customerPhone.trim(),
+      customerEmail: "",
+      deliveryAddress: fullAddress,
+      city: effectiveCity,
+      deliveryNotes: deliveryNotes.trim(),
+      paymentMethod: currentPaymentMethod.name,
+      tidNumber: selectedMethodId !== "cod" ? tidNumber.trim() : "",
       subtotal,
       deliveryFee,
       promoDiscount,
       totalAmount: finalTotal,
-      promoCode: appliedPromo || localStorage.getItem("alraza_referral_code") || "",
-      referralCode: appliedPromo || localStorage.getItem("alraza_referral_code") || "",
-      affiliatePayoutStatus: "pending",
-      paymentMethod: currentPaymentMethod?.name || selectedMethodId,
-      paymentStatus: requiresProof ? "pending" : "pending",
-      status: "confirmed", // Initial status: confirmed & queued for pressing/dispatch
-      tidNumber: requiresProof ? tidNumber : "COD",
-      screenshotUrl: screenshotFile,
-      specialInstructions: deliveryNotes,
-      notes: deliveryNotes,
-      courierName: "",
-      trackingNumber: "",
+      items: cartItems.map((it) => ({
+        product: it.product,
+        selectedSizeIndex: it.selectedSizeIndex,
+        quantity: it.quantity,
+        price: it.product.sizes[it.selectedSizeIndex]?.price || 0,
+      })),
+      date: new Date().toLocaleDateString("en-PK", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }),
       createdAt: new Date().toISOString(),
+      status: "pending",
     };
 
-    try {
-      // Save locally to orders history
-      const existingOrders = JSON.parse(localStorage.getItem("alraza_orders") || "[]");
-      const updatedOrders = [orderPayload, ...existingOrders.filter((o: any) => (o.id || o.orderId) !== orderId)];
-      localStorage.setItem("alraza_orders", JSON.stringify(updatedOrders));
+    // Play chime sound and trigger desktop alert
+    NotificationManager.notify("🎉 New Order Received!", {
+      body: `Order #${orderId} by ${orderPayload.customerName} for Rs. ${orderPayload.totalAmount}`,
+    });
 
-      // Attempt API call if server is running
-      fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderPayload),
-      }).catch(() => {});
-
-      // Send silent email notification to owner via free FormSubmit API
-      const ownerEmail = storeConfig.notificationEmail || "muhammad.farhan.04.208@gmail.com";
-      fetch(`https://formsubmit.co/ajax/${ownerEmail}`, {
-        method: "POST",
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          _subject: `New Order Received - ${orderId} - Al Raza Mart`,
-          Customer: customerName,
-          Phone: customerPhone,
-          Address: `${address}, ${city}`,
-          Payment_Method: currentPaymentMethod?.name || selectedMethodId,
-          Total_Amount: `Rs. ${finalTotal}`,
-          Order_Details: cartItems.map((it) => `${it.product.name} (${it.product.sizes[it.selectedSizeIndex]?.size}) x ${it.quantity}`).join(" | ")
-        })
-      }).catch(() => { /* silent fail if network error */ });
-
-      setCompletedOrder(orderPayload);
-      setStep("success");
-      triggerConfetti();
-      onOrderSuccess(orderPayload);
-    } catch (err) {
-      console.error("Order error:", err);
-      setCompletedOrder(orderPayload);
-      setStep("success");
-      triggerConfetti();
-      onOrderSuccess(orderPayload);
-    } finally {
-      setIsProcessing(false);
-    }
+    setCompletedOrder(orderPayload);
+    setIsSuccess(true);
+    triggerConfetti();
+    onOrderSuccess(orderPayload);
+    setIsProcessing(false);
   };
 
   const handleCopyTracking = () => {
@@ -263,539 +192,426 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     }
   };
 
-  const handleCopyAccount = (accNo: string) => {
-    navigator.clipboard.writeText(accNo);
-    setCopiedAccountNo(true);
-    setTimeout(() => setCopiedAccountNo(false), 2000);
-  };
-
   const generateWhatsAppUrl = () => {
     if (!completedOrder) return "";
     const itemsText = cartItems
       .map((it) => {
-        const size = it.product.sizes[it.selectedSizeIndex]?.size || "500ml";
+        const size = it.product.sizes[it.selectedSizeIndex]?.size || "Standard";
         return `• ${it.product.name} (${size}) x ${it.quantity}`;
       })
       .join("\n");
 
-    let message = `🌿 *NEW ORDER PLACED at ${storeConfig.brandName}*\n\n` +
-      `*Order ID:* ${completedOrder.orderId}\n` +
+    const message = `🌿 *NEW ORDER PLACED at ${storeConfig.brandName}*\n\n` +
+      `*Order ID:* #${completedOrder.orderId}\n` +
       `*Customer:* ${customerName}\n` +
       `*Phone:* ${customerPhone}\n` +
-      `*Address:* ${address}, ${city}\n\n` +
+      `*Address:* ${completedOrder.deliveryAddress}\n\n` +
       `*Items Ordered:*\n${itemsText}\n\n` +
-      `*Subtotal:* Rs. ${subtotal}\n` +
-      `*Delivery Fee:* ${deliveryFee === 0 ? "FREE" : `Rs. ${deliveryFee}`}\n` +
-      (promoDiscount > 0 ? `*Discount:* -Rs. ${promoDiscount}\n` : "") +
-      `*Total Amount:* Rs. ${finalTotal}\n` +
-      `*Payment Method:* ${completedOrder.paymentMethod}\n`;
-
-    if (completedOrder.paymentMethod !== "Cash on Delivery") {
-       message += `*Recorded TID Number:* ${tidNumber || "N/A"}\n\n` +
-       `Please find attached my payment screenshot receipt for quick verification & dispatch!`;
-    } else {
-       message += `\nHello! I have placed this Cash on Delivery order. Please confirm and process my order.`;
-    }
+      `*Total Amount:* Rs. ${finalTotal} (${completedOrder.paymentMethod})\n` +
+      (deliveryNotes ? `*Note:* ${deliveryNotes}\n` : "") +
+      `\nHello! I have placed this Cash on Delivery order. Please confirm dispatch.`;
 
     const cleanNumber = (storeConfig.whatsappNumber || "923292832225").replace(/[^0-9]/g, "");
     return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 md:p-6 animate-fadeIn">
-      <div className="relative w-full max-w-2xl bg-amber-50 text-amber-950 rounded-3xl shadow-2xl overflow-hidden border border-amber-900/30 max-h-[94vh] flex flex-col">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 md:p-6 animate-fadeIn">
+      <div className="relative w-full max-w-4xl bg-white text-stone-900 rounded-3xl shadow-2xl overflow-hidden border border-stone-200 max-h-[94vh] flex flex-col">
         
         {/* Header */}
-        <div className="bg-amber-950 text-amber-50 px-6 py-4 flex items-center justify-between border-b border-amber-800">
-          <div className="flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5 text-amber-400" />
-            <h2 className="font-serif text-lg font-bold">
-              {step === "success" ? "Order Placed & Payment Verification" : "Secure Checkout & Order Booking"}
-            </h2>
+        <div 
+          className="p-5 sm:p-6 text-white flex items-center justify-between border-b"
+          style={{ backgroundColor: "var(--theme-header-bg, #0f172a)" }}
+        >
+          <div className="flex items-center gap-3">
+            <ShoppingBag className="w-5 h-5 text-emerald-400" />
+            <div>
+              <h2 className="font-serif text-lg sm:text-xl font-bold">
+                {isSuccess ? "Order Confirmed / آرڈر مکمل ہو گیا" : "WordPress Easy Checkout / آسان آرڈر چیک آؤٹ"}
+              </h2>
+              <p className="text-xs text-stone-300">
+                {isSuccess ? "Your order has been registered" : "Cash on Delivery · Pay when you receive"}
+              </p>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 text-amber-300 hover:text-white hover:bg-amber-800 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-stone-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Modal Body */}
-        <div className="p-5 sm:p-6 overflow-y-auto flex-1 text-xs sm:text-sm">
+        <div className="p-5 sm:p-6 overflow-y-auto flex-1 text-sm">
           
-          {/* STEP 1: CUSTOMER DETAILS */}
-          {step === "details" && (
-            <form onSubmit={handleDetailsSubmit} className="space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-amber-200">
-                <h3 className="font-serif font-bold text-base text-amber-950 flex items-center gap-2">
-                  <Truck className="w-4 h-4 text-amber-700" />
-                  Step 1: Delivery Address & Contact
-                </h3>
-                <span className="text-xs text-amber-700 font-semibold">{cartItems.length} items in cart</span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-amber-900 font-bold mb-1">Full Name *</label>
-                  <input
-                    id="checkout-name"
-                    type="text"
-                    required
-                    placeholder="e.g. Muhammad Ali"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full bg-white border border-amber-300 rounded-xl px-3 py-2 text-amber-950 focus:outline-none focus:border-amber-700"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-amber-900 font-bold mb-1">Mobile / WhatsApp Number *</label>
-                  <input
-                    id="checkout-phone"
-                    type="tel"
-                    required
-                    placeholder="e.g. 0300 1234567"
-                    value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
-                    className="w-full bg-white border border-amber-300 rounded-xl px-3 py-2 text-amber-950 focus:outline-none focus:border-amber-700"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-amber-900 font-bold mb-1">Email Address (Optional)</label>
-                <input
-                  id="checkout-email"
-                  type="email"
-                  placeholder="e.g. yourname@example.com"
-                  value={customerEmail}
-                  onChange={(e) => setCustomerEmail(e.target.value)}
-                  className="w-full bg-white border border-amber-300 rounded-xl px-3 py-2 text-amber-950 focus:outline-none focus:border-amber-700"
-                />
-              </div>
-
-              <div>
-                <label className="block text-amber-900 font-bold mb-1">Full Delivery Address / House No. *</label>
-                <textarea
-                  id="checkout-address"
-                  required
-                  rows={2}
-                  placeholder="e.g. House # 45, Street 4, Sector G-9/1, Main Road"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  className="w-full bg-white border border-amber-300 rounded-xl px-3 py-2 text-amber-950 focus:outline-none focus:border-amber-700"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-amber-900 font-bold mb-1">City / Town</label>
-                  <input
-                    id="checkout-city"
-                    type="text"
-                    placeholder="e.g. Lahore / Karachi / Islamabad"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="w-full bg-white border border-amber-300 rounded-xl px-3 py-2 text-amber-950 focus:outline-none focus:border-amber-700"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-amber-900 font-bold mb-1">Postal Code (Optional)</label>
-                  <input
-                    id="checkout-pincode"
-                    type="text"
-                    placeholder="e.g. 54000"
-                    value={pincode}
-                    onChange={(e) => setPincode(e.target.value)}
-                    className="w-full bg-white border border-amber-300 rounded-xl px-3 py-2 text-amber-950 focus:outline-none focus:border-amber-700"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-amber-900 font-bold mb-1">Special Delivery Notes (Optional)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Call before arrival, leave with security"
-                  value={deliveryNotes}
-                  onChange={(e) => setDeliveryNotes(e.target.value)}
-                  className="w-full bg-white border border-amber-300 rounded-xl px-3 py-2 text-amber-950 focus:outline-none focus:border-amber-700"
-                />
-              </div>
-
-              <div className="pt-3 flex justify-end">
-                <button
-                  type="submit"
-                  className="px-6 py-2.5 bg-amber-900 hover:bg-amber-800 text-white font-bold rounded-xl shadow flex items-center gap-2 cursor-pointer"
-                >
-                  <span>Continue to Payment</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* STEP 2: PAYMENT METHOD & MANDATORY TID / SCREENSHOT */}
-          {step === "payment" && (
-            <div className="space-y-4 animate-fadeIn">
-              <div className="flex items-center justify-between pb-2 border-b border-amber-200">
-                <h3 className="font-serif font-bold text-base text-amber-950 flex items-center gap-2">
-                  <CreditCard className="w-4 h-4 text-amber-700" />
-                  Step 2: Select Payment Method & Transfer
-                </h3>
-                <span className="text-xs text-amber-900 font-bold">Total Payable: Rs. {finalTotal}</span>
-              </div>
-
-              {/* Payment Methods Options */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {activePaymentMethods.map((pm) => (
-                  <button
-                    key={pm.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedMethodId(pm.id);
-                      setPaymentValidationError(null);
-                    }}
-                    className={`p-3 rounded-2xl border text-left flex items-start justify-between gap-2 transition-all cursor-pointer ${
-                      selectedMethodId === pm.id
-                        ? "border-amber-700 bg-amber-100/90 ring-2 ring-amber-700/30"
-                        : "border-amber-200 bg-white hover:bg-amber-50"
-                    }`}
-                  >
-                    <div>
-                      <p className="font-bold text-xs sm:text-sm text-amber-950">{pm.name}</p>
-                      <p className="text-[11px] text-amber-800 line-clamp-1">{pm.instructions}</p>
-                    </div>
-                    {selectedMethodId === pm.id && (
-                      <CheckCircle2 className="w-4 h-4 text-amber-800 shrink-0 mt-0.5" />
-                    )}
-                  </button>
-                ))}
-              </div>
-
-              {/* Selected Payment Method Details Box */}
-              {currentPaymentMethod && (
-                <div className="bg-amber-950 text-amber-100 p-4 rounded-2xl border border-amber-800 space-y-2.5">
-                  <div className="flex items-center justify-between border-b border-amber-800/80 pb-2">
-                    <span className="font-bold text-xs uppercase tracking-wider text-amber-400">
-                      Transfer Details for {currentPaymentMethod.name}
-                    </span>
-                    <span className="text-xs font-serif font-bold text-emerald-400">Amount: Rs. {finalTotal}</span>
-                  </div>
-
-                  {currentPaymentMethod.accountNumber && currentPaymentMethod.accountNumber !== "N/A" && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                      <div className="bg-amber-900/60 p-2.5 rounded-xl border border-amber-800">
-                        <span className="text-[11px] text-amber-300 block">Account Title:</span>
-                        <strong className="text-white text-sm">{currentPaymentMethod.accountTitle}</strong>
-                      </div>
-
-                      <div className="bg-amber-900/60 p-2.5 rounded-xl border border-amber-800 flex items-center justify-between">
-                        <div>
-                          <span className="text-[11px] text-amber-300 block">Account / Mobile Number:</span>
-                          <strong className="text-white text-sm font-mono">{currentPaymentMethod.accountNumber}</strong>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleCopyAccount(currentPaymentMethod.accountNumber)}
-                          className="p-1.5 bg-amber-800 hover:bg-amber-700 text-amber-200 rounded-lg text-[11px] flex items-center gap-1 cursor-pointer"
-                        >
-                          {copiedAccountNo ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                          <span>{copiedAccountNo ? "Copied" : "Copy"}</span>
-                        </button>
-                      </div>
-
-                      {currentPaymentMethod.iban && (
-                        <div className="sm:col-span-2 bg-amber-900/60 p-2 rounded-xl border border-amber-800 text-xs">
-                          <span className="text-[11px] text-amber-300">IBAN: </span>
-                          <span className="font-mono text-white select-all">{currentPaymentMethod.iban}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  <p className="text-xs text-amber-200/90 bg-amber-900/40 p-2 rounded-xl border border-amber-800/60">
-                    💡 <strong>Instructions:</strong> {currentPaymentMethod.instructions}
-                  </p>
-                </div>
-              )}
-
-              {/* MANDATORY TID & SCREENSHOT UPLOAD (Required for Online Transfer) */}
-              {requiresProof && (
-                <div className="bg-white p-4 rounded-2xl border-2 border-amber-400 space-y-3 shadow-xs">
-                  <div className="flex items-center gap-2 text-amber-950 font-bold text-xs uppercase tracking-wide">
-                    <FileCheck className="w-4 h-4 text-emerald-600" />
-                    <span>Mandatory Payment Verification Proof</span>
-                  </div>
-
-                  <p className="text-xs text-amber-900">
-                    To prevent delayed dispatches, please provide your <strong>Transaction ID (TID)</strong> and upload the <strong>payment screenshot</strong>.
-                  </p>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* Mandatory TID Field */}
-                    <div>
-                      <label className="block text-amber-950 font-bold text-xs mb-1">
-                        1. Transaction ID (TID / Trx ID) *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="e.g. 10293847561"
-                        value={tidNumber}
-                        onChange={(e) => {
-                          setTidNumber(e.target.value);
-                          setPaymentValidationError(null);
-                        }}
-                        className="w-full bg-amber-50/70 border border-amber-300 rounded-xl px-3 py-2 font-mono text-sm text-amber-950 focus:outline-none focus:border-amber-700"
-                      />
-                    </div>
-
-                    {/* Mandatory Screenshot Attachment */}
-                    <div>
-                      <label className="block text-amber-950 font-bold text-xs mb-1">
-                        2. Payment Screenshot Receipt *
-                      </label>
-                      <label className="flex items-center gap-2 w-full bg-amber-50/70 hover:bg-amber-100/80 border border-dashed border-amber-400 rounded-xl px-3 py-2 cursor-pointer transition-colors">
-                        <Upload className="w-4 h-4 text-amber-700 shrink-0" />
-                        <span className="text-xs text-amber-900 font-medium truncate">
-                          {screenshotFileName ? screenshotFileName : "Choose receipt screenshot..."}
-                        </span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleScreenshotUpload}
-                          className="hidden"
-                        />
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Screenshot Thumbnail Preview */}
-                  {screenshotFile && screenshotFile.trim() !== "" && (
-                    <div className="flex items-center gap-3 p-2 bg-emerald-50 border border-emerald-300 rounded-xl">
-                      <img
-                        src={screenshotFile}
-                        alt="Payment Proof Receipt"
-                        className="w-12 h-12 object-cover rounded-lg border border-emerald-400 shadow-xs"
-                      />
-                      <div className="text-xs text-emerald-900">
-                        <p className="font-bold flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Screenshot Attached!
-                        </p>
-                        <p className="text-[11px] text-emerald-700">Receipt will be sent directly to WhatsApp support & owner panel.</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Validation Error Message */}
-                  {paymentValidationError && (
-                    <div className="bg-rose-50 border border-rose-300 text-rose-800 p-2.5 rounded-xl text-xs flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                      <span>{paymentValidationError}</span>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Total Summary Breakdown */}
-              <div className="bg-amber-100/80 p-3.5 rounded-2xl border border-amber-300 space-y-1.5 text-xs text-amber-950">
-                <div className="flex justify-between">
-                  <span className="text-amber-800">Items Subtotal ({cartItems.length}):</span>
-                  <span className="font-semibold">Rs. {subtotal}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-amber-800 flex items-center gap-1">
-                    <Truck className="w-3.5 h-3.5 text-amber-700" />
-                    Delivery Charges:
-                  </span>
-                  <span className="font-bold text-amber-950">
-                    Rs. {deliveryFee}
-                  </span>
-                </div>
-                {promoDiscount > 0 && (
-                  <div className="flex justify-between text-emerald-800">
-                    <span>Discount Applied:</span>
-                    <span className="font-bold">-Rs. {promoDiscount}</span>
-                  </div>
-                )}
-                <div className="border-t border-amber-300 pt-1.5 flex justify-between items-center text-sm font-bold text-amber-950">
-                  <span>Grand Total Payable:</span>
-                  <span className="font-serif text-base text-emerald-900">Rs. {finalTotal}</span>
-                </div>
-              </div>
-
-              {/* Navigation Actions */}
-              <div className="pt-2 flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={() => setStep("details")}
-                  className="text-xs font-bold text-amber-800 hover:text-amber-950 cursor-pointer"
-                >
-                  &larr; Back to Details
-                </button>
-                
-                <button
-                  id="confirm-place-order-btn"
-                  onClick={handlePlaceOrder}
-                  disabled={isProcessing || (requiresProof && (!tidNumber.trim() || !screenshotFile))}
-                  className="px-6 py-2.5 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-bold rounded-xl shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isProcessing ? (
-                    "Processing Order..."
-                  ) : (
-                    <>
-                      <span>Confirm & Place Order (Rs. {finalTotal})</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 3: SUCCESS & MANDATORY WHATSAPP SUBMISSION */}
-          {step === "success" && completedOrder && (
-            <div className="text-center space-y-4 animate-fadeIn py-2">
-              <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto text-emerald-700 border-2 border-emerald-300 shadow-inner">
+          {/* SUCCESS SCREEN */}
+          {isSuccess && completedOrder ? (
+            <div className="text-center space-y-6 py-4 animate-fadeIn">
+              <div className="w-16 h-16 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto shadow-lg">
                 <CheckCircle2 className="w-10 h-10" />
               </div>
 
               <div>
-                <h3 className="font-serif text-2xl font-bold text-amber-950">
-                  Order Successfully Registered!
+                <span className="inline-block bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-2">
+                  Order Successfully Placed
+                </span>
+                <h3 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900">
+                  Thank You, {customerName}!
                 </h3>
-                <p className="text-xs text-amber-800 mt-1">
-                  Thank you, <strong>{customerName}</strong>. Your cold-pressed oil batch is reserved.
+                <p className="text-xs sm:text-sm text-stone-600 mt-1 max-w-md mx-auto">
+                  آپ کا کیش آن ڈیلیوری آرڈر موصول ہو چکا ہے۔ پارسل کی ترسیل کے وقت رقم ادا کریں۔
                 </p>
               </div>
 
-              {/* Order Reference Card */}
-              <div className="bg-white p-4 rounded-2xl border border-amber-300 text-left space-y-2.5 text-xs shadow-xs">
-                <div className="flex items-center justify-between border-b border-amber-100 pb-2">
-                  <span className="text-amber-800">Order Tracking ID:</span>
-                  <div className="flex items-center gap-1">
-                    <span className="font-mono font-bold text-amber-950 text-sm">{completedOrder.orderId}</span>
-                    <button
-                      onClick={handleCopyTracking}
-                      className="p-1 text-amber-700 hover:text-amber-950 cursor-pointer"
-                      title="Copy Tracking ID"
-                    >
-                      {copiedTracking ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                    </button>
+              {/* Order Details summary */}
+              <div className="bg-stone-50 border border-stone-200 rounded-2xl p-5 max-w-lg mx-auto text-left space-y-3">
+                <div className="flex items-center justify-between pb-3 border-b border-stone-200">
+                  <div>
+                    <span className="text-[11px] text-stone-500 font-bold block">Order ID</span>
+                    <span className="font-mono text-lg font-bold text-stone-900">
+                      #{completedOrder.orderId}
+                    </span>
                   </div>
+                  <button
+                    type="button"
+                    onClick={handleCopyTracking}
+                    className="px-3 py-1.5 bg-white border border-stone-300 text-stone-700 text-xs font-bold rounded-lg flex items-center gap-1.5 hover:bg-stone-100 cursor-pointer"
+                  >
+                    {copiedTracking ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copy ID</span>
+                      </>
+                    )}
+                  </button>
                 </div>
 
-                <div className="flex justify-between">
-                  <span className="text-amber-800">Payment Mode:</span>
-                  <span className="font-bold text-amber-950">{completedOrder.paymentMethod}</span>
-                </div>
-
-                {completedOrder.tidNumber && (
-                  <div className="flex justify-between bg-amber-50 p-1.5 rounded-lg">
-                    <span className="text-amber-800">Recorded TID:</span>
-                    <span className="font-mono font-bold text-amber-950">{completedOrder.tidNumber}</span>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <span className="text-stone-500 font-medium">Customer:</span>
+                    <p className="font-bold text-stone-900">{customerName}</p>
                   </div>
-                )}
-
-                {/* Delivery Charges Line */}
-                <div className="flex justify-between text-amber-900 border-t border-amber-100 pt-1.5">
-                  <span>Items Subtotal:</span>
-                  <span className="font-semibold">Rs. {subtotal}</span>
-                </div>
-                <div className="flex justify-between text-amber-900">
-                  <span className="flex items-center gap-1">
-                    <Truck className="w-3.5 h-3.5 text-amber-700" />
-                    Delivery Charges:
-                  </span>
-                  <span className="font-bold text-amber-950">
-                    Rs. {deliveryFee}
-                  </span>
-                </div>
-                {promoDiscount > 0 && (
-                  <div className="flex justify-between text-emerald-800">
-                    <span>Discount:</span>
-                    <span className="font-bold">-Rs. {promoDiscount}</span>
+                  <div>
+                    <span className="text-stone-500 font-medium">Phone:</span>
+                    <p className="font-bold text-stone-900">{customerPhone}</p>
                   </div>
-                )}
-
-                <div className="flex justify-between border-t border-amber-200 pt-1.5">
-                  <span className="font-bold text-amber-950 text-sm">Total Paid:</span>
-                  <span className="font-bold text-emerald-800 text-sm font-serif">Rs. {completedOrder.totalAmount}</span>
+                  <div className="col-span-2">
+                    <span className="text-stone-500 font-medium">Address:</span>
+                    <p className="text-stone-800">{completedOrder.deliveryAddress}</p>
+                  </div>
+                  <div>
+                    <span className="text-stone-500 font-medium">Payment:</span>
+                    <p className="font-bold text-emerald-700">{completedOrder.paymentMethod}</p>
+                  </div>
+                  <div>
+                    <span className="text-stone-500 font-medium">Total:</span>
+                    <p className="font-bold text-base text-stone-900">Rs. {finalTotal}</p>
+                  </div>
                 </div>
               </div>
 
-              {/* ACTION: TRACK ORDER BUTTON */}
-              {onOpenOrderTracking && (
-                <div className="bg-amber-100/90 border border-amber-300 p-3.5 rounded-2xl flex items-center justify-between gap-3 text-left">
-                  <div>
-                    <span className="font-bold text-xs text-amber-950 block flex items-center gap-1.5">
-                      <Truck className="w-4 h-4 text-amber-800" />
-                      Live Order Tracking
-                    </span>
-                    <p className="text-[11px] text-amber-800">
-                      Track cold-pressing, packaging & courier dispatch updates in real time.
-                    </p>
-                  </div>
+              {/* PROMINENT WHATSAPP SEND BUTTON */}
+              <div className="max-w-lg mx-auto space-y-3">
+                <a
+                  href={generateWhatsAppUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-4 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-xl flex items-center justify-center gap-3 transition-transform hover:scale-[1.02] ring-4 ring-emerald-400/50 animate-pulse text-base cursor-pointer"
+                >
+                  <MessageCircle className="w-5 h-5 fill-current" />
+                  <span>واٹس ایپ پر آرڈر بھیجیں (Send on WhatsApp)</span>
+                </a>
+                <p className="text-xs text-stone-500">
+                  ⚡ فوری تصدیق اور جلد پارسل روانگی کے لیے واٹس ایپ پر آرڈر شیئر کریں۔
+                </p>
+              </div>
+
+              <div className="pt-2 flex justify-center gap-4">
+                {onOpenOrderTracking && (
                   <button
                     onClick={() => {
                       onClose();
                       onOpenOrderTracking(completedOrder.orderId);
                     }}
-                    className="px-3.5 py-2 bg-amber-900 hover:bg-amber-800 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shrink-0 shadow-md cursor-pointer transition-all"
+                    className="text-xs font-bold text-emerald-700 hover:underline cursor-pointer"
                   >
-                    <span>Track Order</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    Track This Order / آرڈر ٹریک کریں
                   </button>
-                </div>
-              )}
-
-              {/* CRITICAL WHATSAPP SUPPORT SUBMISSION BUTTON */}
-              <div className="bg-emerald-50 border-2 border-emerald-400 p-4 rounded-2xl space-y-2.5 text-center">
-                <p className="text-xs font-bold text-emerald-900">
-                  {completedOrder.paymentMethod === "Cash on Delivery"
-                    ? "📱 IMPORTANT: Confirm Order on WhatsApp"
-                    : "📱 IMPORTANT: Send your Payment Screenshot to WhatsApp"}
-                </p>
-                <p className="text-[11px] text-emerald-800">
-                  {completedOrder.paymentMethod === "Cash on Delivery"
-                    ? "Click the button below to send your Order details to our WhatsApp team to confirm your Cash on Delivery order and ensure fast shipping!"
-                    : "Click the button below to send your Order ID & TID details to our WhatsApp team for immediate verification and fast shipping dispatch!"}
-                </p>
-                
-                <a
-                  href={generateWhatsAppUrl()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 cursor-pointer transition-all text-sm animate-pulse"
-                >
-                  <MessageCircle className="w-5 h-5" />
-                  <span>
-                    {completedOrder.paymentMethod === "Cash on Delivery"
-                      ? "Send Order Details to WhatsApp"
-                      : "Send Screenshot & TID to WhatsApp"}
-                  </span>
-                </a>
-              </div>
-
-              <div className="pt-2 flex justify-center gap-3">
-                <button
-                  onClick={() => window.print()}
-                  className="px-6 py-2 bg-stone-200 hover:bg-stone-300 text-stone-800 font-bold rounded-xl cursor-pointer text-xs flex items-center gap-2 print:hidden"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                  Print Receipt
-                </button>
+                )}
                 <button
                   onClick={onClose}
-                  className="px-6 py-2 bg-amber-900 hover:bg-amber-800 text-white font-bold rounded-xl cursor-pointer text-xs print:hidden"
+                  className="text-xs font-bold text-stone-600 hover:underline cursor-pointer"
                 >
-                  Return to Store
+                  Close / بند کریں
                 </button>
               </div>
             </div>
+          ) : (
+            /* SINGLE-PAGE WORDPRESS CHECKOUT FORM */
+            <form onSubmit={handlePlaceOrder} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              
+              {/* Left Column: Delivery Details (7 Cols) */}
+              <div className="lg:col-span-7 space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b border-stone-200">
+                  <Truck className="w-4 h-4 text-emerald-700" />
+                  <h3 className="font-serif font-bold text-base text-stone-900">
+                    Delivery Address / ترسیل کی تفصیلات
+                  </h3>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 mb-1">
+                      Full Name / پورا نام <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <User className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
+                      <input
+                        id="checkout-name"
+                        type="text"
+                        required
+                        placeholder="e.g. Muhammad Ali"
+                        value={customerName}
+                        onChange={(e) => setCustomerName(e.target.value)}
+                        className="w-full bg-stone-50 border border-stone-300 rounded-xl pl-9 pr-3 py-2 text-stone-900 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 mb-1">
+                      Mobile / WhatsApp Number <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Phone className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
+                      <input
+                        id="checkout-phone"
+                        type="tel"
+                        required
+                        placeholder="e.g. 0300 1234567"
+                        value={customerPhone}
+                        onChange={(e) => setCustomerPhone(e.target.value)}
+                        className="w-full bg-stone-50 border border-stone-300 rounded-xl pl-9 pr-3 py-2 text-stone-900 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">
+                    Delivery Address / گھر کا مکمل پتہ اور گلی <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <MapPin className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
+                    <textarea
+                      id="checkout-address"
+                      required
+                      rows={2}
+                      placeholder="e.g. House # 45, Street # 3, Sector G-10/2"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      className="w-full bg-stone-50 border border-stone-300 rounded-xl pl-9 pr-3 py-2 text-stone-900 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 mb-1">
+                      City / شہر <span className="text-rose-500">*</span>
+                    </label>
+                    <select
+                      id="checkout-city"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-stone-900 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none"
+                    >
+                      {PAKISTAN_CITIES.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+
+                    {city === "Other City" && (
+                      <input
+                        type="text"
+                        placeholder="Enter your city name"
+                        value={customCity}
+                        onChange={(e) => setCustomCity(e.target.value)}
+                        className="mt-2 w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-stone-900 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                      />
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 mb-1">
+                      Special Delivery Notes (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Deliver before 5 PM"
+                      value={deliveryNotes}
+                      onChange={(e) => setDeliveryNotes(e.target.value)}
+                      className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-stone-900 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Payment Method Selector */}
+                <div className="pt-2">
+                  <label className="block text-xs font-bold text-stone-700 mb-2">
+                    Payment Method / طریقہ ادائیگی:
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedMethodId("cod")}
+                      className={`p-3 rounded-2xl border text-left flex items-start gap-2.5 transition-all cursor-pointer ${
+                        selectedMethodId === "cod"
+                          ? "border-emerald-600 bg-emerald-50 ring-2 ring-emerald-500/30"
+                          : "border-stone-200 bg-stone-50 hover:bg-stone-100"
+                      }`}
+                    >
+                      <Banknote className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-stone-900 text-xs">Cash on Delivery</span>
+                          {selectedMethodId === "cod" && <CheckCircle2 className="w-4 h-4 text-emerald-700" />}
+                        </div>
+                        <span className="text-[11px] text-stone-600 block">پارسل ملنے پر رقم دیں</span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedMethodId("easypaisa")}
+                      className={`p-3 rounded-2xl border text-left flex items-start gap-2.5 transition-all cursor-pointer ${
+                        selectedMethodId !== "cod"
+                          ? "border-emerald-600 bg-emerald-50 ring-2 ring-emerald-500/30"
+                          : "border-stone-200 bg-stone-50 hover:bg-stone-100"
+                      }`}
+                    >
+                      <CreditCard className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-stone-900 text-xs">Online Transfer</span>
+                          {selectedMethodId !== "cod" && <CheckCircle2 className="w-4 h-4 text-emerald-700" />}
+                        </div>
+                        <span className="text-[11px] text-stone-600 block">EasyPaisa / JazzCash / Bank</span>
+                      </div>
+                    </button>
+                  </div>
+
+                  {selectedMethodId !== "cod" && (
+                    <div className="mt-3 bg-stone-900 text-stone-100 p-3.5 rounded-2xl space-y-2 text-xs animate-fadeIn">
+                      <p className="font-bold text-stone-200">Account Details for Transfer:</p>
+                      {storeConfig.paymentMethods.filter(p => p.active && p.id !== "cod").slice(0, 2).map((pm) => (
+                        <div key={pm.id} className="bg-stone-800 p-2 rounded-xl flex items-center justify-between">
+                          <div>
+                            <span className="font-bold text-white block">{pm.name} ({pm.accountTitle})</span>
+                            <span className="text-emerald-400 font-mono">{pm.accountNumber}</span>
+                          </div>
+                        </div>
+                      ))}
+                      <input
+                        type="text"
+                        placeholder="TID Number (Optional / or send on WhatsApp)"
+                        value={tidNumber}
+                        onChange={(e) => setTidNumber(e.target.value)}
+                        className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-1.5 text-white text-xs mt-1"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right Column: Order Review & Total (5 Cols) */}
+              <div className="lg:col-span-5 bg-stone-50 border border-stone-200 rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-stone-200">
+                    <h3 className="font-serif font-bold text-sm text-stone-900">
+                      Order Summary ({cartItems.length} items)
+                    </h3>
+                  </div>
+
+                  {/* Cart Items list */}
+                  <div className="max-h-48 overflow-y-auto space-y-2 pr-1 text-xs">
+                    {cartItems.map((item, idx) => {
+                      const sz = item.product.sizes[item.selectedSizeIndex] || item.product.sizes[0];
+                      return (
+                        <div key={idx} className="flex items-center justify-between py-1 border-b border-stone-100">
+                          <div>
+                            <p className="font-bold text-stone-900 line-clamp-1">{item.product.name}</p>
+                            <p className="text-[10px] text-stone-500">Size: {sz?.size} x {item.quantity}</p>
+                          </div>
+                          <span className="font-bold text-stone-900 shrink-0">
+                            Rs. {(sz?.price || 0) * item.quantity}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Price breakdown */}
+                  <div className="space-y-1.5 pt-2 border-t border-stone-200 text-xs">
+                    <div className="flex justify-between text-stone-600">
+                      <span>Subtotal:</span>
+                      <span className="font-semibold text-stone-900">Rs. {subtotal}</span>
+                    </div>
+
+                    {promoDiscount > 0 && (
+                      <div className="flex justify-between text-emerald-700 font-semibold">
+                        <span>Discount ({appliedPromo}):</span>
+                        <span>-Rs. {promoDiscount}</span>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between text-stone-600">
+                      <span>Delivery Fee:</span>
+                      <span className="font-semibold text-stone-900">
+                        {deliveryFee === 0 ? "FREE" : `Rs. ${deliveryFee}`}
+                      </span>
+                    </div>
+
+                    <div className="pt-2 border-t border-stone-300 flex justify-between items-baseline">
+                      <span className="font-bold text-sm text-stone-900">Total Payable:</span>
+                      <span className="font-serif text-xl font-bold text-emerald-800">
+                        Rs. {finalTotal}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Submit button */}
+                <div className="space-y-2 pt-2">
+                  <button
+                    type="submit"
+                    disabled={isProcessing || cartItems.length === 0}
+                    className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 transition-transform hover:scale-[1.01] active:scale-98 text-sm cursor-pointer"
+                  >
+                    <PackageCheck className="w-5 h-5" />
+                    <span>
+                      {isProcessing
+                        ? "Booking Order..."
+                        : `Place Order (Cash on Delivery)`}
+                    </span>
+                  </button>
+
+                  <div className="flex items-center justify-center gap-2 text-[10px] text-stone-500">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>100% Pure Guaranteed · Pay Upon Delivery</span>
+                  </div>
+                </div>
+
+              </div>
+
+            </form>
           )}
 
         </div>

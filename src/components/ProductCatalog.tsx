@@ -19,6 +19,7 @@ interface ProductCatalogProps {
   products: Product[];
   onAddToCart: (product: Product, sizeIndex: number, quantity: number) => void;
   onQuickView: (product: Product) => void;
+  onBuyNow?: (product: Product, sizeIndex: number) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
 }
@@ -27,6 +28,7 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
   products,
   onAddToCart,
   onQuickView,
+  onBuyNow,
   searchQuery,
   setSearchQuery,
 }) => {
@@ -300,6 +302,7 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
                   product={product}
                   onAddToCart={onAddToCart}
                   onQuickView={onQuickView}
+                  onBuyNow={onBuyNow}
                 />
               </motion.div>
             ))}

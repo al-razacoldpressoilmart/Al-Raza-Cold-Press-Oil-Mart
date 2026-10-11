@@ -334,73 +334,39 @@ export const Footer: React.FC<FooterProps> = ({
             </ul>
           </div>
 
-          {/* Col 3: Interactive Features */}
+          {/* Col 3: Quick Links */}
           <div className="lg:col-span-2 space-y-3 text-xs">
             <h4 className={`font-serif font-bold text-sm uppercase tracking-wider ${isLight ? "text-stone-900" : "text-white"}`}>
-              Explore & Info
+              Quick Links
             </h4>
-            <ul className={`space-y-2 ${isLight ? "text-stone-600" : "opacity-80"}`}>
+            <ul className={`space-y-2.5 ${isLight ? "text-stone-600" : "opacity-80"}`}>
+              <li>
+                <a href="#order-form" className="hover:underline font-bold text-emerald-700 flex items-center gap-1">
+                  <span>⚡ Quick Order Form (آرڈر فارم)</span>
+                </a>
+              </li>
+              <li>
+                <a href="#products" className="hover:underline transition-colors block">
+                  All Pure Oils (تمام تیل)
+                </a>
+              </li>
+              <li>
+                <a href="#reviews" className="hover:underline transition-colors block">
+                  Customer Reviews (تاثرات)
+                </a>
+              </li>
               {onOpenOrderTracking && (
                 <li>
                   <button
                     id="footer-track-order-btn"
                     onClick={onOpenOrderTracking}
-                    className="hover:underline text-left flex items-center gap-1.5 transition-colors cursor-pointer text-amber-500 font-bold"
+                    className="hover:underline text-left flex items-center gap-1.5 transition-colors cursor-pointer text-stone-700 font-semibold"
                   >
-                    <Truck className="w-3.5 h-3.5" />
+                    <Truck className="w-3.5 h-3.5 text-emerald-600" />
                     <span>Track Order Status</span>
                   </button>
                 </li>
               )}
-              {onOpenAffiliate && (
-                <li>
-                  <button
-                    id="footer-affiliate-btn"
-                    onClick={onOpenAffiliate}
-                    className="hover:underline text-left flex items-center gap-1.5 transition-colors cursor-pointer text-emerald-600 font-bold"
-                  >
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>Affiliate Program ({affRate}%)</span>
-                  </button>
-                </li>
-              )}
-              {onOpenQuiz && (
-                <li>
-                  <button
-                    id="footer-oil-quiz-btn"
-                    onClick={onOpenQuiz}
-                    className="hover:underline text-left transition-colors cursor-pointer"
-                  >
-                    Oil Recommendation Quiz
-                  </button>
-                </li>
-              )}
-              {onOpenBatchVerifier && (
-                <li>
-                  <button
-                    id="footer-batch-verifier-btn"
-                    onClick={() => onOpenBatchVerifier()}
-                    className="hover:underline text-left transition-colors cursor-pointer"
-                  >
-                    Lab Batch Quality Verifier
-                  </button>
-                </li>
-              )}
-              <li>
-                <a href="#process" className="hover:underline transition-colors block">
-                  Cold Press Extraction Process
-                </a>
-              </li>
-              <li>
-                <a href="#recipes" className="hover:underline transition-colors block">
-                  Healthy Traditional Recipes
-                </a>
-              </li>
-              <li>
-                <a href="#mart-visit" className="hover:underline transition-colors block">
-                  Live Mart & Google Maps Location
-                </a>
-              </li>
             </ul>
           </div>
 

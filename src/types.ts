@@ -101,3 +101,24 @@ export interface Recipe {
   wellnessBenefit: string;
   image?: string;
 }
+
+export interface AffiliatePartner {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  paymentMethod: string;
+  accountNumber?: string;
+  accountTitle?: string;
+  accountDetails?: string;
+  platform?: string;
+  referralCode: string;
+  status: "active" | "pending" | "suspended";
+  totalSales?: number;
+  totalEarnings?: number;
+  pendingPayout?: number;
+  commissionRate?: number;
+  customDiscount?: string | number;
+  registeredAt?: string;
+  createdAt?: string;
+}

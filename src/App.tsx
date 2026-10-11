@@ -6,18 +6,14 @@ import { COLOR_THEMES, ColorTheme } from "./data/themes";
 import { INITIAL_REVIEWS } from "./data/reviews";
 import { Navbar } from "./components/Navbar";
 import { HeroBanner } from "./components/HeroBanner";
-import { ProcessShowcase } from "./components/ProcessShowcase";
 import { ProductCatalog } from "./components/ProductCatalog";
+import { WordPressOrderForm } from "./components/WordPressOrderForm";
+import { ReviewsSection } from "./components/ReviewsSection";
 import { ProductDetailModal } from "./components/ProductDetailModal";
 import { CartDrawer } from "./components/CartDrawer";
 import { CheckoutModal } from "./components/CheckoutModal";
-import { BatchVerifier } from "./components/BatchVerifier";
-import { OilFinderQuiz } from "./components/OilFinderQuiz";
-import { RecipesSection } from "./components/RecipesSection";
-import { MartVisitSection } from "./components/MartVisitSection";
 import { Footer } from "./components/Footer";
 import { OwnerPanelModal } from "./components/OwnerPanelModal";
-import { AffiliateModal } from "./components/AffiliateModal";
 import { OrderTrackingModal } from "./components/OrderTrackingModal";
 import { FloatingWhatsAppButton } from "./components/FloatingWhatsAppButton";
 import { AuthModal } from "./components/AuthModal";
@@ -66,16 +62,16 @@ export default function App() {
     }
   });
 
-  // 3. Active 150 Color Themes state (Default: Obsidian Luxury Black)
+  // 3. Active 150 Color Themes state (Default: WordPress Clean White & Emerald)
   const [activeThemeId, setActiveThemeId] = useState<string>(() => {
     try {
       const saved = localStorage.getItem("alraza_active_theme");
-      if (saved && saved !== "royal-amber" && saved !== "warm-mustard") {
+      if (saved && saved !== "royal-amber" && saved !== "warm-mustard" && saved !== "obsidian-luxury-black") {
         return saved;
       }
-      return "obsidian-luxury-black";
+      return "wordpress-clean";
     } catch {
-      return "obsidian-luxury-black";
+      return "wordpress-clean";
     }
   });
 
@@ -107,10 +103,6 @@ export default function App() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [isBatchVerifierOpen, setIsBatchVerifierOpen] = useState(false);
-  const [selectedBatchCode, setSelectedBatchCode] = useState<string>("AR-GNT-2026-08");
-  const [isQuizOpen, setIsQuizOpen] = useState(false);
-  const [isAffiliateOpen, setIsAffiliateOpen] = useState(false);
   const [isOwnerPanelOpen, setIsOwnerPanelOpen] = useState(false);
   const [isOrderTrackingOpen, setIsOrderTrackingOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -121,6 +113,20 @@ export default function App() {
       setTrackingOrderId(orderId);
     }
     setIsOrderTrackingOpen(true);
+  };
+
+  // Pre-selected product for WordPress Quick Order Form
+  const [preSelectedOrderProduct, setPreSelectedOrderProduct] = useState<{
+    product: Product;
+    sizeIndex: number;
+  } | null>(null);
+
+  const handleBuyNow = (product: Product, sizeIndex: number) => {
+    setPreSelectedOrderProduct({ product, sizeIndex });
+    const orderFormEl = document.getElementById("order-form");
+    if (orderFormEl) {
+      orderFormEl.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   // Cart State (Persisted in localStorage)
@@ -502,11 +508,6 @@ export default function App() {
     showToast("Promo code removed");
   };
 
-  const handleOpenBatchVerifier = (batchNo?: string) => {
-    if (batchNo) setSelectedBatchCode(batchNo);
-    setIsBatchVerifierOpen(true);
-  };
-
   const handleOrderSuccess = (orderPayload: any) => {
     setOrders((prev) => [orderPayload, ...prev]);
 
@@ -748,9 +749,6 @@ export default function App() {
       <Navbar
         cartCount={totalCartCount}
         onOpenCart={() => setIsCartOpen(true)}
-        onOpenBatchVerifier={() => handleOpenBatchVerifier()}
-        onOpenQuiz={() => setIsQuizOpen(true)}
-        onOpenAffiliate={() => setIsAffiliateOpen(true)}
         onOpenOrderTracking={handleOpenOrderTracking}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -767,35 +765,37 @@ export default function App() {
         {/* Hero Section */}
         <HeroBanner
           onExploreProducts={() => scrollToSection("products")}
-          onOpenQuiz={() => setIsQuizOpen(true)}
-          onOpenProcess={() => scrollToSection("process")}
+          onQuickOrder={() => scrollToSection("order-form")}
           storeConfig={storeConfig}
         />
-
-        {/* Cold Press 6-Step Precision Process & Refined vs Cold Pressed Comparison */}
-        <ProcessShowcase />
 
         {/* Product Catalog with Categories, Search, Filters & Size Selection */}
         <ProductCatalog
           products={products}
           onAddToCart={handleAddToCart}
           onQuickView={(product) => setSelectedProduct(product)}
+          onBuyNow={handleBuyNow}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
         />
 
-        {/* Traditional Culinary Recipes & Ayurvedic Remedies */}
-        <RecipesSection />
+        {/* WordPress Style Simple Cash on Delivery Order Form */}
+        <WordPressOrderForm
+          products={products}
+          onOrderSuccess={handleOrderSuccess}
+          storeConfig={storeConfig}
+          preSelectedProduct={preSelectedOrderProduct}
+          onClearPreSelected={() => setPreSelectedOrderProduct(null)}
+        />
 
-        {/* Physical Mart Visit, Live Extraction Timings, Reviews & Wholesale Bulk Inquiry */}
-        <MartVisitSection storeConfig={storeConfig} />
+        {/* Customer Reviews & Trust Badges */}
+        <div id="reviews">
+          <ReviewsSection reviews={reviews} />
+        </div>
       </main>
 
-      {/* Comprehensive Footer with Live Bottom Theme Studio */}
+      {/* Clean Footer */}
       <Footer
-        onOpenQuiz={() => setIsQuizOpen(true)}
-        onOpenBatchVerifier={handleOpenBatchVerifier}
-        onOpenAffiliate={() => setIsAffiliateOpen(true)}
         onOpenOrderTracking={handleOpenOrderTracking}
         storeConfig={storeConfig}
         activeThemeId={activeThemeId}
@@ -808,7 +808,6 @@ export default function App() {
         product={selectedProduct}
         onClose={() => setSelectedProduct(null)}
         onAddToCart={handleAddToCart}
-        onVerifyBatch={(batchNo) => handleOpenBatchVerifier(batchNo)}
         reviews={reviews}
         onSubmitReview={handleCreateReview}
         storeConfig={storeConfig}
@@ -846,27 +845,6 @@ export default function App() {
         isOpen={isOrderTrackingOpen}
         onClose={() => setIsOrderTrackingOpen(false)}
         initialOrderId={trackingOrderId}
-        storeConfig={storeConfig}
-        allOrders={orders}
-      />
-
-      <BatchVerifier
-        isOpen={isBatchVerifierOpen}
-        onClose={() => setIsBatchVerifierOpen(false)}
-        initialBatchNo={selectedBatchCode}
-      />
-
-      <OilFinderQuiz
-        isOpen={isQuizOpen}
-        onClose={() => setIsQuizOpen(false)}
-        products={products}
-        onAddToCart={handleAddToCart}
-        onSelectProduct={(product) => setSelectedProduct(product)}
-      />
-
-      <AffiliateModal
-        isOpen={isAffiliateOpen}
-        onClose={() => setIsAffiliateOpen(false)}
         storeConfig={storeConfig}
         allOrders={orders}
       />

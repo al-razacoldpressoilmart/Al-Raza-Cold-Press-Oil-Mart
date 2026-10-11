@@ -16,13 +16,13 @@ import { ASSETS } from "../assets/images";
 
 interface HeroBannerProps {
   onExploreProducts: () => void;
-  onOpenProcess: () => void;
+  onQuickOrder?: () => void;
   storeConfig: StoreConfig;
 }
 
 export const HeroBanner: React.FC<HeroBannerProps> = ({
   onExploreProducts,
-  onOpenProcess,
+  onQuickOrder,
   storeConfig,
 }) => {
   return (
@@ -112,47 +112,26 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
 
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3.5 pt-4">
+              {onQuickOrder && (
+                <button
+                  id="hero-quick-order-btn"
+                  onClick={onQuickOrder}
+                  className="px-6 py-3.5 font-bold text-sm sm:text-base rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center gap-2 cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white ring-2 ring-emerald-400/40 animate-pulse"
+                >
+                  <span>⚡ فوری آرڈر (Order Now)</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              )}
+
               <button
                 id="hero-explore-products-btn"
                 onClick={onExploreProducts}
                 className="px-6 py-3.5 font-bold text-sm sm:text-base rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center gap-2 cursor-pointer text-white"
-                style={{ backgroundColor: "var(--theme-primary, #b45309)" }}
+                style={{ backgroundColor: "var(--theme-primary, #15803d)" }}
               >
                 <span>Shop Pure Oils</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
-
-              <button
-                id="hero-process-btn"
-                onClick={onOpenProcess}
-                className="px-5 py-3.5 border text-white font-semibold text-sm sm:text-base rounded-xl shadow transition-all flex items-center gap-2 cursor-pointer"
-                style={{
-                  backgroundColor: "rgba(0, 0, 0, 0.3)",
-                  borderColor: "var(--theme-border, #fde68a)"
-                }}
-              >
-                <Layers className="w-4 h-4" style={{ color: "var(--theme-accent, #f59e0b)" }} />
-                <span>Cold Press Process</span>
-              </button>
-            </div>
-
-            {/* Live Pressing Alert */}
-            <div className="pt-2">
-              <div 
-                onClick={onOpenProcess}
-                className="inline-flex items-center gap-2.5 border px-4 py-2 rounded-xl text-xs cursor-pointer transition-all text-white"
-                style={{
-                  backgroundColor: "rgba(0, 0, 0, 0.3)",
-                  borderColor: "var(--theme-border, #fde68a)"
-                }}
-              >
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                </span>
-                <span><strong>Live Mart Press:</strong> {storeConfig.liveExtractionSchedule}</span>
-                <span className="font-semibold underline hidden sm:inline" style={{ color: "var(--theme-accent, #f59e0b)" }}>Learn Process &rarr;</span>
-              </div>
             </div>
           </div>
 
