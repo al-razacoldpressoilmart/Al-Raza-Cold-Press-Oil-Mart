@@ -24,6 +24,7 @@ import confetti from "canvas-confetti";
 import { Product } from "../types";
 import { StoreConfig } from "../data/storeConfig";
 import { NotificationManager } from "../utils/NotificationManager";
+import { Language, TRANSLATIONS } from "../utils/translations";
 
 interface WordPressOrderFormProps {
   products: Product[];
@@ -31,6 +32,7 @@ interface WordPressOrderFormProps {
   storeConfig: StoreConfig;
   preSelectedProduct?: { product: Product; sizeIndex: number } | null;
   onClearPreSelected?: () => void;
+  language?: Language;
 }
 
 const PAKISTAN_CITIES = [
@@ -68,10 +70,13 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
   storeConfig,
   preSelectedProduct,
   onClearPreSelected,
+  language = "ur",
 }) => {
   const formRef = useRef<HTMLDivElement>(null);
+  const t = TRANSLATIONS[language];
+  const isUrdu = language === "ur";
 
-  // Items in the simple form
+  // Items in the form
   const [items, setItems] = useState<OrderItemLine[]>(() => {
     if (products.length > 0) {
       return [{ productId: products[0].id, sizeIndex: 0, quantity: 1 }];
@@ -115,13 +120,18 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
     }
   }, [preSelectedProduct, onClearPreSelected]);
 
+  // Group products by category for clean dropdown
+  const oilProducts = products.filter(p => p.category === "oils" || p.category === "cooking" || p.category === "wellness" || p.category === "beauty");
+  const spiceProducts = products.filter(p => p.category === "spices");
+  const flourProducts = products.filter(p => p.category === "flour");
+
   // Calculations
   const calculatedItems = items.map((item) => {
     const product = products.find((p) => p.id === item.productId) || products[0];
     const sizeOpt = product?.sizes[item.sizeIndex] || product?.sizes[0] || {
-      size: "500ml",
-      price: 1000,
-      originalPrice: 1200,
+      size: "Pack",
+      price: 500,
+      originalPrice: 600,
       inStock: true,
     };
     return {
@@ -182,7 +192,7 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
         particleCount: 80,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ["#16a34a", "#22c55e", "#d97706", "#f59e0b"],
+        colors: ["#15803d", "#22c55e", "#d97706", "#f59e0b"],
       });
     } catch {
       // ignore
@@ -194,7 +204,7 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
     if (isSubmitting) return;
 
     if (!customerName.trim() || !customerPhone.trim() || !address.trim()) {
-      alert("Please fill in your Name, Phone Number, and Delivery Address.");
+      alert(isUrdu ? "براہ کرم اپنا نام، موبائل نمبر اور گھر کا پتہ درج کریں۔" : "Please fill in your Name, Phone Number, and Delivery Address.");
       return;
     }
 
@@ -274,18 +284,22 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
       .join("\n");
 
     const message =
-      `🌿 *NEW ORDER DETAILS (${storeConfig.brandName})*\n\n` +
+      `🌿 *NEW ORDER (${storeConfig.brandName})*\n\n` +
       `*Order ID:* #${completedOrder.orderId}\n` +
-      `*Customer:* ${completedOrder.customerName}\n` +
+      `*Customer Name:* ${completedOrder.customerName}\n` +
       `*Phone:* ${completedOrder.customerPhone}\n` +
-      `*Address:* ${completedOrder.deliveryAddress}\n\n` +
-      `*Ordered Items:*\n${itemsList}\n\n` +
-      `*Total Amount:* Rs. ${completedOrder.totalAmount} (${completedOrder.paymentMethod})\n` +
-      (completedOrder.deliveryNotes ? `*Note:* ${completedOrder.deliveryNotes}\n` : "") +
-      `\nAssalam o Alaikum! I have placed this Cash on Delivery order on your website. Please confirm dispatch.`;
+      `*Address:* ${completedOrder.deliveryAddress}\n` +
+      `*City:* ${completedOrder.city}\n` +
+      `*Payment:* ${completedOrder.paymentMethod}\n\n` +
+      `*Order Items:*\n${itemsList}\n\n` +
+      `*Subtotal:* Rs. ${completedOrder.subtotal}\n` +
+      `*Delivery Fee:* ${completedOrder.deliveryFee === 0 ? "FREE" : `Rs. ${completedOrder.deliveryFee}`}\n` +
+      `*TOTAL PAYABLE:* Rs. ${completedOrder.totalAmount}\n\n` +
+      (completedOrder.deliveryNotes ? `*Notes:* ${completedOrder.deliveryNotes}\n\n` : "") +
+      `براہ کرم میرا آرڈر جلد سے جلد بھیج دیجیے گا۔ شکریہ!`;
 
-    const cleanNum = (storeConfig.whatsappNumber || "923292832225").replace(/[^0-9]/g, "");
-    return `https://wa.me/${cleanNum}?text=${encodeURIComponent(message)}`;
+    const rawPhone = (storeConfig.whatsappNumber || "923001234567").replace(/[^0-9]/g, "");
+    return `https://wa.me/${rawPhone}?text=${encodeURIComponent(message)}`;
   };
 
   const handleResetForm = () => {
@@ -294,66 +308,62 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
     setCustomerPhone("");
     setAddress("");
     setDeliveryNotes("");
-    setOnlineTid("");
-    if (products.length > 0) {
-      setItems([{ productId: products[0].id, sizeIndex: 0, quantity: 1 }]);
-    }
+    setItems([{ productId: products[0]?.id || "", sizeIndex: 0, quantity: 1 }]);
   };
 
   return (
     <section 
       id="order-form" 
       ref={formRef}
-      className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 border-b transition-colors duration-300"
-      style={{
-        backgroundColor: "var(--theme-bg-secondary, #ffffff)",
-        borderColor: "var(--theme-border, #e2e8f0)",
-      }}
+      className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-slate-50 border-b border-slate-200 transition-colors duration-200"
     >
       <div className="max-w-4xl mx-auto">
         
         {/* If Order is Placed: Highlight WhatsApp Screen */}
         {completedOrder ? (
-          <div className="bg-emerald-50 border-2 border-emerald-500 rounded-3xl p-6 sm:p-8 shadow-xl text-center space-y-6 animate-fadeIn">
-            <div className="w-16 h-16 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto shadow-lg">
+          <div className="bg-white border-2 border-emerald-500 rounded-3xl p-6 sm:p-8 shadow-xl text-center space-y-6">
+            <div className="w-16 h-16 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto shadow-md">
               <CheckCircle2 className="w-10 h-10" />
             </div>
 
             <div>
-              <span className="inline-block bg-emerald-200 text-emerald-900 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-2">
-                Order Received Successfully / آرڈر موصول ہو گیا ہے
+              <span className="inline-block bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-2">
+                {isUrdu ? "آرڈر کامیابی سے بک ہو گیا ہے!" : "Order Placed Successfully!"}
               </span>
-              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-emerald-950">
-                Thank You, {completedOrder.customerName}!
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+                {isUrdu ? `شکریہ جناب ${completedOrder.customerName} صاحب!` : `Thank You, ${completedOrder.customerName}!`}
               </h2>
-              <p className="text-emerald-800 text-sm mt-1 max-w-lg mx-auto">
-                آپ کا آرڈر سسٹم میں درج ہو چکا ہے۔ ہمارا نمائندہ آپ سے رابطہ کر کے پارسل روانہ کر دے گا۔
+              <p className="text-slate-600 text-sm mt-1 max-w-lg mx-auto">
+                {isUrdu 
+                  ? "آپ کا آرڈر موصول ہو چکا ہے۔ پارسل کی فوری ترسیل کے لیے نیچے دیے گئے بٹن پر کلک کر کے واٹس ایپ پر کنفرم فرمائیں۔"
+                  : "Your order has been recorded. Click the button below to confirm with our dispatch team on WhatsApp for fastest delivery."
+                }
               </p>
             </div>
 
             {/* Order Details Card */}
-            <div className="bg-white rounded-2xl p-5 border border-emerald-200 shadow-sm text-left max-w-xl mx-auto space-y-3">
-              <div className="flex items-center justify-between pb-3 border-b border-stone-200">
+            <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200 shadow-2xs text-left max-w-xl mx-auto space-y-3">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200">
                 <div>
-                  <span className="text-xs text-stone-500 font-semibold block">Order Tracking ID:</span>
-                  <span className="font-mono text-lg font-bold text-stone-900">
+                  <span className="text-xs text-slate-500 font-semibold block">{t.orderIdLabel}:</span>
+                  <span className="font-mono text-lg font-bold text-slate-900">
                     #{completedOrder.orderId}
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={handleCopyOrderId}
-                  className="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
+                  className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-800 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer border border-slate-200 shadow-2xs"
                 >
                   {copiedOrderId ? (
                     <>
                       <Check className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Copied!</span>
+                      <span>{isUrdu ? "کاپی ہو گیا!" : "Copied!"}</span>
                     </>
                   ) : (
                     <>
                       <Copy className="w-3.5 h-3.5" />
-                      <span>Copy ID</span>
+                      <span>{isUrdu ? "نمبر کاپی کریں" : "Copy ID"}</span>
                     </>
                   )}
                 </button>
@@ -361,34 +371,34 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
 
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div>
-                  <span className="text-stone-500 font-semibold block">Customer Name:</span>
-                  <span className="font-bold text-stone-900">{completedOrder.customerName}</span>
+                  <span className="text-slate-500 font-semibold block">{t.fullNameLabel}:</span>
+                  <span className="font-bold text-slate-900">{completedOrder.customerName}</span>
                 </div>
                 <div>
-                  <span className="text-stone-500 font-semibold block">Phone Number:</span>
-                  <span className="font-bold text-stone-900">{completedOrder.customerPhone}</span>
+                  <span className="text-slate-500 font-semibold block">{t.phoneLabel}:</span>
+                  <span className="font-bold text-slate-900">{completedOrder.customerPhone}</span>
                 </div>
                 <div className="col-span-2">
-                  <span className="text-stone-500 font-semibold block">Delivery Address:</span>
-                  <span className="text-stone-900">{completedOrder.deliveryAddress}</span>
+                  <span className="text-slate-500 font-semibold block">{t.addressLabel}:</span>
+                  <span className="text-slate-900">{completedOrder.deliveryAddress}</span>
                 </div>
                 <div>
-                  <span className="text-stone-500 font-semibold block">Payment Method:</span>
-                  <span className="font-bold text-emerald-800">{completedOrder.paymentMethod}</span>
+                  <span className="text-slate-500 font-semibold block">ادائیگی کا طریقہ:</span>
+                  <span className="font-bold text-emerald-700">{completedOrder.paymentMethod}</span>
                 </div>
                 <div>
-                  <span className="text-stone-500 font-semibold block">Total Amount:</span>
-                  <span className="font-bold text-lg text-emerald-900">Rs. {completedOrder.totalAmount}</span>
+                  <span className="text-slate-500 font-semibold block">{t.totalPayable}:</span>
+                  <span className="font-extrabold text-lg text-emerald-700">Rs. {completedOrder.totalAmount}</span>
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-stone-100 text-xs">
-                <span className="text-stone-500 font-semibold block mb-1">Items Summary:</span>
+              <div className="pt-2 border-t border-slate-200 text-xs">
+                <span className="text-slate-500 font-semibold block mb-1">اشیاء کی تفصیل:</span>
                 <ul className="space-y-1">
                   {completedOrder.items.map((it: any, idx: number) => {
                     const sz = it.product?.sizes?.[it.selectedSizeIndex]?.size || "";
                     return (
-                      <li key={idx} className="flex justify-between text-stone-700">
+                      <li key={idx} className="flex justify-between text-slate-700">
                         <span>• {it.product?.name} ({sz}) x {it.quantity}</span>
                         <span className="font-semibold">Rs. {it.price * it.quantity}</span>
                       </li>
@@ -404,72 +414,72 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
                 href={generateWhatsAppUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full py-4 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-xl flex items-center justify-center gap-3 transition-transform hover:scale-[1.02] active:scale-98 ring-4 ring-emerald-400/50 animate-pulse text-base sm:text-lg cursor-pointer"
+                className="w-full py-4 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-2xl shadow-lg flex items-center justify-center gap-3 transition-transform hover:scale-[1.01] active:scale-98 ring-4 ring-emerald-400/40 text-base sm:text-lg cursor-pointer"
               >
                 <MessageCircle className="w-6 h-6 fill-current" />
-                <span>واٹس ایپ پر آرڈر بھیجیں (Send Details on WhatsApp)</span>
+                <span>{t.confirmOnWhatsApp} (WhatsApp)</span>
               </a>
-              <p className="text-xs text-stone-600">
-                ⚡ کلک کر کے فوری طور پر اپنے آرڈر کی تصدیق واٹس ایپ پر حاصل کریں تاکہ پارسل فوری روانہ کیا جا سکے۔
+              <p className="text-xs text-slate-500">
+                {isUrdu 
+                  ? "⚡ بٹن پر کلک کر کے واٹس ایپ پر آرڈر میسج بھیجیں تاکہ پارسل اسی وقت پیک کر کے روانہ کیا جا سکے۔"
+                  : "⚡ Click above to send order details via WhatsApp for immediate priority dispatch."
+                }
               </p>
             </div>
 
-            <div className="pt-4 border-t border-emerald-200">
+            <div className="pt-2 border-t border-slate-200">
               <button
                 type="button"
                 onClick={handleResetForm}
-                className="text-emerald-900 hover:text-emerald-700 text-xs font-bold underline cursor-pointer"
+                className="text-emerald-700 hover:text-emerald-800 text-xs font-bold underline cursor-pointer"
               >
-                Place Another Order / نیا آرڈر بک کریں
+                {isUrdu ? "نیا آرڈر بک کریں" : "Place Another Order"}
               </button>
             </div>
           </div>
         ) : (
-          /* THE CLEAN WORDPRESS ORDER FORM */
-          <div className="bg-white rounded-3xl border border-stone-200 shadow-xl overflow-hidden">
+          /* THE CLEAN WORDPRESS COD ORDER FORM */
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-md overflow-hidden">
             
-            {/* Form Top Banner */}
-            <div 
-              className="p-6 sm:p-8 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-              style={{ backgroundColor: "var(--theme-header-bg, #0f172a)" }}
-            >
+            {/* Form Top Header */}
+            <div className="p-6 sm:p-8 bg-emerald-700 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <div className="inline-flex items-center gap-2 bg-emerald-600 text-white text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-2">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>WordPress Quick Order Form / آسان کیش آن ڈیلیوری فارم</span>
+                <div className="inline-flex items-center gap-2 bg-emerald-800 text-white text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-2">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
+                  <span>{isUrdu ? "فوری کیش آن ڈیلیوری فارم" : "Quick Cash on Delivery Form"}</span>
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-serif font-bold">
-                  Cash on Delivery Order Form
+                <h2 className="text-2xl sm:text-3xl font-extrabold">
+                  {t.orderFormTitle}
                 </h2>
-                <p className="text-stone-300 text-xs sm:text-sm mt-1">
-                  نیچے دیا گیا فارم پُر کر کے فوری آرڈر بک کریں۔ رقم پارسل وصول کرتے وقت ادا کریں۔
+                <p className="text-emerald-100 text-xs sm:text-sm mt-1">
+                  {t.orderFormSubtitle}
                 </p>
               </div>
 
-              <div className="flex items-center gap-3 shrink-0 bg-white/10 px-4 py-2.5 rounded-2xl border border-white/10 text-xs">
-                <Truck className="w-5 h-5 text-emerald-400 shrink-0" />
+              <div className="flex items-center gap-3 shrink-0 bg-emerald-800/80 px-4 py-2.5 rounded-2xl border border-emerald-600 text-xs">
+                <Truck className="w-5 h-5 text-emerald-200 shrink-0" />
                 <div>
-                  <span className="block font-bold text-white">Cash on Delivery</span>
-                  <span className="text-stone-300 text-[11px]">All Over Pakistan</span>
+                  <span className="block font-bold text-white">{isUrdu ? "کیش آن ڈیلیوری" : "Cash on Delivery"}</span>
+                  <span className="text-emerald-200 text-[11px]">{isUrdu ? "پورے پاکستان میں" : "Across Pakistan"}</span>
                 </div>
               </div>
             </div>
 
             <form onSubmit={handleSubmitOrder} className="p-6 sm:p-8 space-y-8">
               
-              {/* STEP 1: PRODUCT SELECTION */}
+              {/* STEP 1: PRODUCT SELECTION WITH CATEGORY OPTGROUPS */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between pb-2 border-b border-stone-200">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200">
                   <div className="flex items-center gap-2">
                     <span className="w-6 h-6 rounded-full bg-emerald-700 text-white text-xs font-bold flex items-center justify-center">
                       1
                     </span>
-                    <h3 className="font-serif font-bold text-lg text-stone-900">
-                      Select Your Products / پروڈکٹ کا انتخاب کریں
+                    <h3 className="font-bold text-base sm:text-lg text-slate-900">
+                      {isUrdu ? "اشیاء کا انتخاب کریں (تیل، مصالحہ جات یا آٹا)" : "Select Products (Oils, Spices or Flour)"}
                     </h3>
                   </div>
-                  <span className="text-xs text-stone-500 font-semibold">
-                    100% Pure Cold Pressed
+                  <span className="text-xs text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                    100% Pure & Organic
                   </span>
                 </div>
 
@@ -481,35 +491,59 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
                     return (
                       <div 
                         key={idx}
-                        className="bg-stone-50 border border-stone-200 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                        className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4"
                       >
                         {/* Product Picker */}
                         <div className="flex-1 min-w-[200px]">
-                          <label className="block text-[11px] font-bold text-stone-600 mb-1">
-                            Pure Oil / تیل منتخب کریں:
+                          <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                            {t.selectProductLabel}:
                           </label>
                           <select
                             value={item.productId}
                             onChange={(e) => handleUpdateItemProduct(idx, e.target.value)}
-                            className="w-full bg-white border border-stone-300 rounded-xl px-3 py-2 text-stone-900 text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                            className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                           >
-                            {products.map((p) => (
-                              <option key={p.id} value={p.id}>
-                                {p.name} {p.nativeName ? `(${p.nativeName})` : ""}
-                              </option>
-                            ))}
+                            {oilProducts.length > 0 && (
+                              <optgroup label={isUrdu ? "خالص تیل جات (Pure Oils)" : "Pure Oils"}>
+                                {oilProducts.map((p) => (
+                                  <option key={p.id} value={p.id}>
+                                    {isUrdu ? `${p.name} (${p.nativeName.split("(")[0].trim()})` : p.name}
+                                  </option>
+                                ))}
+                              </optgroup>
+                            )}
+
+                            {spiceProducts.length > 0 && (
+                              <optgroup label={isUrdu ? "خالص مصالحہ جات (Spices & Masalajat)" : "Spices & Masalajat"}>
+                                {spiceProducts.map((p) => (
+                                  <option key={p.id} value={p.id}>
+                                    {isUrdu ? `${p.name} (${p.nativeName.split("(")[0].trim()})` : p.name}
+                                  </option>
+                                ))}
+                              </optgroup>
+                            )}
+
+                            {flourProducts.length > 0 && (
+                              <optgroup label={isUrdu ? "چکی کا آٹا اور اناج (Chakki Atta & Flour)" : "Chakki Atta & Flour"}>
+                                {flourProducts.map((p) => (
+                                  <option key={p.id} value={p.id}>
+                                    {isUrdu ? `${p.name} (${p.nativeName.split("(")[0].trim()})` : p.name}
+                                  </option>
+                                ))}
+                              </optgroup>
+                            )}
                           </select>
                         </div>
 
                         {/* Size Picker */}
                         <div className="w-full md:w-48">
-                          <label className="block text-[11px] font-bold text-stone-600 mb-1">
-                            Bottle Size / سائز:
+                          <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                            {t.selectSizeLabel}:
                           </label>
                           <select
                             value={item.sizeIndex}
                             onChange={(e) => handleUpdateItemSize(idx, Number(e.target.value))}
-                            className="w-full bg-white border border-stone-300 rounded-xl px-3 py-2 text-stone-900 text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                            className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                           >
                             {product?.sizes.map((s, sIdx) => (
                               <option key={sIdx} value={sIdx}>
@@ -521,24 +555,24 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
 
                         {/* Quantity Counter */}
                         <div>
-                          <label className="block text-[11px] font-bold text-stone-600 mb-1">
-                            Quantity / تعداد:
+                          <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                            {t.quantityLabel}:
                           </label>
-                          <div className="flex items-center gap-2 bg-white border border-stone-300 rounded-xl p-1">
+                          <div className="flex items-center gap-2 bg-white border border-slate-300 rounded-xl p-1">
                             <button
                               type="button"
                               onClick={() => handleUpdateQuantity(idx, -1)}
-                              className="w-7 h-7 rounded-lg bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-700 font-bold transition-colors cursor-pointer"
+                              className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 font-bold transition-colors cursor-pointer"
                             >
                               <Minus className="w-3.5 h-3.5" />
                             </button>
-                            <span className="w-8 text-center font-bold text-sm text-stone-900">
+                            <span className="w-8 text-center font-bold text-sm text-slate-900">
                               {item.quantity}
                             </span>
                             <button
                               type="button"
                               onClick={() => handleUpdateQuantity(idx, 1)}
-                              className="w-7 h-7 rounded-lg bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-700 font-bold transition-colors cursor-pointer"
+                              className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 font-bold transition-colors cursor-pointer"
                             >
                               <Plus className="w-3.5 h-3.5" />
                             </button>
@@ -548,8 +582,8 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
                         {/* Price & Delete */}
                         <div className="flex items-center justify-between md:flex-col md:items-end gap-2 shrink-0">
                           <div className="text-right">
-                            <span className="text-[10px] text-stone-500 block">Total</span>
-                            <span className="font-bold text-emerald-800 text-base">
+                            <span className="text-[10px] text-slate-500 block">Total</span>
+                            <span className="font-extrabold text-emerald-800 text-base">
                               Rs. {(sizeOpt?.price || 0) * item.quantity}
                             </span>
                           </div>
@@ -576,87 +610,87 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
                   className="px-4 py-2 border border-dashed border-emerald-600 text-emerald-700 hover:bg-emerald-50 rounded-xl text-xs font-bold flex items-center gap-2 transition-colors cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>+ Add Another Oil / مزید آئل شامل کریں</span>
+                  <span>{isUrdu ? "+ مزید چیز شامل کریں (Add Another Item)" : "+ Add Another Product"}</span>
                 </button>
               </div>
 
               {/* STEP 2: CUSTOMER INFORMATION */}
               <div className="space-y-4">
-                <div className="flex items-center gap-2 pb-2 border-b border-stone-200">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
                   <span className="w-6 h-6 rounded-full bg-emerald-700 text-white text-xs font-bold flex items-center justify-center">
                     2
                   </span>
-                  <h3 className="font-serif font-bold text-lg text-stone-900">
-                    Delivery Address & Information / ڈیلیوری کی معلومات
+                  <h3 className="font-bold text-base sm:text-lg text-slate-900">
+                    {isUrdu ? "ڈیلیوری کی معلومات" : "Delivery Address & Contact Details"}
                   </h3>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-stone-700 mb-1">
-                      Full Name / آپ کا پورا نام <span className="text-rose-500">*</span>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      {t.fullNameLabel} <span className="text-rose-500">*</span>
                     </label>
                     <div className="relative">
-                      <User className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
+                      <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                       <input
                         id="order-form-name"
                         type="text"
                         required
-                        placeholder="e.g. Muhammad Usman"
+                        placeholder={isUrdu ? "مثلاً محمد عثمان" : "e.g. Muhammad Usman"}
                         value={customerName}
                         onChange={(e) => setCustomerName(e.target.value)}
-                        className="w-full bg-stone-50 border border-stone-300 rounded-xl pl-9 pr-3 py-2.5 text-stone-900 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none"
+                        className="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-3 py-2.5 text-slate-900 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-stone-700 mb-1">
-                      WhatsApp / Mobile Number / موبائل نمبر <span className="text-rose-500">*</span>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      {t.phoneLabel} <span className="text-rose-500">*</span>
                     </label>
                     <div className="relative">
-                      <Phone className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
+                      <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                       <input
                         id="order-form-phone"
                         type="tel"
                         required
-                        placeholder="e.g. 0300 1234567"
+                        placeholder="0300 1234567"
                         value={customerPhone}
                         onChange={(e) => setCustomerPhone(e.target.value)}
-                        className="w-full bg-stone-50 border border-stone-300 rounded-xl pl-9 pr-3 py-2.5 text-stone-900 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none"
+                        className="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-3 py-2.5 text-slate-900 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                       />
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-stone-700 mb-1">
-                    Complete Delivery Address / گھر کا مکمل پتہ اور گلی، مکان نمبر <span className="text-rose-500">*</span>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    {t.addressLabel} <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative">
-                    <MapPin className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
+                    <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                     <textarea
                       id="order-form-address"
                       required
                       rows={2}
-                      placeholder="e.g. House # 12, Street # 5, Block B, Model Town"
+                      placeholder={isUrdu ? "مکان نمبر، گلی، محلہ، نزدیکی مشہور جگہ" : "House #, Street #, Sector / Area"}
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
-                      className="w-full bg-stone-50 border border-stone-300 rounded-xl pl-9 pr-3 py-2.5 text-stone-900 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none"
+                      className="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-3 py-2.5 text-slate-900 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-stone-700 mb-1">
-                      City / شہر <span className="text-rose-500">*</span>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      {t.cityLabel} <span className="text-rose-500">*</span>
                     </label>
                     <select
                       id="order-form-city"
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
-                      className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2.5 text-stone-900 text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none"
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-slate-900 text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                     >
                       {PAKISTAN_CITIES.map((c) => (
                         <option key={c} value={c}>
@@ -671,21 +705,21 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
                         placeholder="Enter your city name"
                         value={customCity}
                         onChange={(e) => setCustomCity(e.target.value)}
-                        className="mt-2 w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-stone-900 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                        className="mt-2 w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                       />
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-stone-700 mb-1">
-                      Special Delivery Instructions / خصوصی ہدایات (اختیاری)
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      {t.notesLabel}
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. Call before delivery, deliver in afternoon"
+                      placeholder={isUrdu ? "مثلاً ڈیلیوری سے پہلے فون کریں" : "e.g. Call before delivery"}
                       value={deliveryNotes}
                       onChange={(e) => setDeliveryNotes(e.target.value)}
-                      className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2.5 text-stone-900 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none"
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-slate-900 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -693,12 +727,12 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
 
               {/* STEP 3: PAYMENT METHOD */}
               <div className="space-y-4">
-                <div className="flex items-center gap-2 pb-2 border-b border-stone-200">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
                   <span className="w-6 h-6 rounded-full bg-emerald-700 text-white text-xs font-bold flex items-center justify-center">
                     3
                   </span>
-                  <h3 className="font-serif font-bold text-lg text-stone-900">
-                    Payment Method / طریقہ ادائیگی
+                  <h3 className="font-bold text-base sm:text-lg text-slate-900">
+                    {isUrdu ? "طریقہ ادائیگی" : "Payment Method"}
                   </h3>
                 </div>
 
@@ -709,21 +743,21 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
                     className={`p-4 rounded-2xl border text-left flex items-start gap-3 transition-all cursor-pointer ${
                       paymentType === "cod"
                         ? "border-emerald-600 bg-emerald-50 ring-2 ring-emerald-500/30"
-                        : "border-stone-200 bg-white hover:bg-stone-50"
+                        : "border-slate-200 bg-white hover:bg-slate-50"
                     }`}
                   >
                     <Banknote className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-stone-900 text-sm">
-                          Cash on Delivery (COD)
+                        <span className="font-bold text-slate-900 text-sm">
+                          {isUrdu ? "کیش آن ڈیلیوری (COD)" : "Cash on Delivery"}
                         </span>
                         {paymentType === "cod" && (
                           <CheckCircle2 className="w-4 h-4 text-emerald-700" />
                         )}
                       </div>
-                      <span className="text-xs text-stone-600 block mt-0.5">
-                        کیش آن ڈیلیوری - پارسل ملنے پر رقم ادا کریں۔
+                      <span className="text-xs text-slate-600 block mt-0.5">
+                        {t.codNotice}
                       </span>
                     </div>
                   </button>
@@ -734,21 +768,21 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
                     className={`p-4 rounded-2xl border text-left flex items-start gap-3 transition-all cursor-pointer ${
                       paymentType === "online"
                         ? "border-emerald-600 bg-emerald-50 ring-2 ring-emerald-500/30"
-                        : "border-stone-200 bg-white hover:bg-stone-50"
+                        : "border-slate-200 bg-white hover:bg-slate-50"
                     }`}
                   >
                     <CreditCard className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-stone-900 text-sm">
+                        <span className="font-bold text-slate-900 text-sm">
                           EasyPaisa / JazzCash / Bank
                         </span>
                         {paymentType === "online" && (
                           <CheckCircle2 className="w-4 h-4 text-emerald-700" />
                         )}
                       </div>
-                      <span className="text-xs text-stone-600 block mt-0.5">
-                        آن لائن پیمنٹ ٹرانسفر (اختیاری)
+                      <span className="text-xs text-slate-600 block mt-0.5">
+                        {isUrdu ? "آن لائن ٹرانسفر (اختیاری)" : "Online Transfer (Optional)"}
                       </span>
                     </div>
                   </button>
@@ -756,9 +790,9 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
 
                 {/* Online Payment Details Box if selected */}
                 {paymentType === "online" && (
-                  <div className="bg-stone-900 text-stone-100 p-4 rounded-2xl space-y-3 animate-fadeIn text-xs">
-                    <p className="font-bold text-stone-200">
-                      Select Account for Transfer:
+                  <div className="bg-slate-900 text-white p-4 rounded-2xl space-y-3 text-xs">
+                    <p className="font-bold text-slate-200">
+                      {isUrdu ? "اکاؤنٹ منتخب کریں:" : "Select Account for Payment:"}
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {storeConfig.paymentMethods
@@ -769,12 +803,12 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
                             onClick={() => setSelectedOnlineMethodId(pm.id)}
                             className={`p-3 rounded-xl border cursor-pointer transition-all ${
                               selectedOnlineMethodId === pm.id
-                                ? "border-emerald-400 bg-stone-800"
-                                : "border-stone-700 bg-stone-800/50 hover:bg-stone-800"
+                                ? "border-emerald-400 bg-slate-800"
+                                : "border-slate-700 bg-slate-800/60 hover:bg-slate-800"
                             }`}
                           >
                             <span className="font-bold text-white block">{pm.name}</span>
-                            <span className="text-stone-300 block">{pm.accountTitle}</span>
+                            <span className="text-slate-300 block">{pm.accountTitle}</span>
                             <span className="text-emerald-400 font-mono font-bold block">
                               {pm.accountNumber}
                             </span>
@@ -783,15 +817,15 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
                     </div>
 
                     <div>
-                      <label className="block text-stone-300 mb-1">
-                        Transaction ID (TID) / اختیاری رسید نمبر:
+                      <label className="block text-slate-300 mb-1">
+                        {isUrdu ? "رسید نمبر (TID / Trx ID) - اختیاری:" : "Transaction ID (TID) - Optional:"}
                       </label>
                       <input
                         type="text"
-                        placeholder="e.g. 1234567890 (or send on WhatsApp after ordering)"
+                        placeholder="e.g. 1234567890"
                         value={onlineTid}
                         onChange={(e) => setOnlineTid(e.target.value)}
-                        className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500"
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500"
                       />
                     </div>
                   </div>
@@ -799,37 +833,42 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
               </div>
 
               {/* STEP 4: ORDER SUMMARY & SUBMIT */}
-              <div className="bg-stone-50 border border-stone-200 rounded-2xl p-5 space-y-4">
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-stone-600 font-medium">Subtotal ({calculatedItems.length} items):</span>
-                  <span className="font-bold text-stone-900">Rs. {subtotal}</span>
+                  <span className="text-slate-600 font-medium">
+                    {t.subtotal} ({calculatedItems.length} items):
+                  </span>
+                  <span className="font-bold text-slate-900">Rs. {subtotal}</span>
                 </div>
 
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-stone-600 font-medium">Delivery Charges:</span>
+                    <span className="text-slate-600 font-medium">{t.deliveryFee}:</span>
                     {isFreeDelivery && (
                       <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
                         FREE Delivery
                       </span>
                     )}
                   </div>
-                  <span className="font-bold text-stone-900">
-                    {deliveryFee === 0 ? "FREE (مفت)" : `Rs. ${deliveryFee}`}
+                  <span className="font-bold text-slate-900">
+                    {deliveryFee === 0 ? `${t.free}` : `Rs. ${deliveryFee}`}
                   </span>
                 </div>
 
                 {!isFreeDelivery && subtotal > 0 && (
-                  <p className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2 font-medium">
-                    💡 مزید Rs. {Math.max(0, freeThreshold - subtotal)} کی خریداری پر ہوم ڈیلیوری بالکل مفت حاصل کریں!
+                  <p className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-2 font-medium">
+                    {isUrdu 
+                      ? `💡 مزید Rs. ${Math.max(0, freeThreshold - subtotal)} کی خریداری پر ہوم ڈیلیوری بالکل مفت حاصل کریں!`
+                      : `💡 Add Rs. ${Math.max(0, freeThreshold - subtotal)} more for FREE Home Delivery!`
+                    }
                   </p>
                 )}
 
-                <div className="pt-3 border-t border-stone-200 flex items-center justify-between">
-                  <span className="text-base font-bold text-stone-900">
-                    Total Payable Amount / کل رقم:
+                <div className="pt-3 border-t border-slate-200 flex items-center justify-between">
+                  <span className="text-base font-extrabold text-slate-900">
+                    {t.totalPayable}:
                   </span>
-                  <span className="text-2xl font-serif font-bold text-emerald-800">
+                  <span className="text-2xl font-black text-emerald-700">
                     Rs. {finalTotal}
                   </span>
                 </div>
@@ -838,29 +877,29 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
                 <button
                   type="submit"
                   disabled={isSubmitting || subtotal === 0}
-                  className="w-full py-4 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-xl flex items-center justify-center gap-3 transition-transform hover:scale-[1.01] active:scale-98 text-base sm:text-lg cursor-pointer"
+                  className="w-full py-4 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-2xl shadow-lg flex items-center justify-center gap-3 transition-transform hover:scale-[1.01] active:scale-98 text-base sm:text-lg cursor-pointer disabled:opacity-50"
                 >
                   <PackageCheck className="w-6 h-6" />
                   <span>
                     {isSubmitting
-                      ? "Booking Order..."
-                      : `Confirm Order / آرڈر مکمل کریں (Rs. ${finalTotal})`}
+                      ? (isUrdu ? "آرڈر بک ہو رہا ہے..." : "Booking Order...")
+                      : `${t.submitOrder} (Rs. ${finalTotal})`}
                   </span>
                   <ArrowRight className="w-5 h-5" />
                 </button>
 
-                <div className="grid grid-cols-3 gap-2 text-center pt-2 text-[11px] text-stone-500 font-medium">
+                <div className="grid grid-cols-3 gap-2 text-center pt-2 text-[11px] text-slate-500 font-medium">
                   <div className="flex items-center justify-center gap-1">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>100% Pure Guaranteed</span>
+                    <span>{isUrdu ? "100% خالص ضمانت" : "100% Pure Guarantee"}</span>
                   </div>
                   <div className="flex items-center justify-center gap-1">
                     <Truck className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>2-3 Days Fast Delivery</span>
+                    <span>{isUrdu ? "تیز رفتار ترسیل" : "Fast Delivery"}</span>
                   </div>
                   <div className="flex items-center justify-center gap-1">
                     <Banknote className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Cash on Delivery</span>
+                    <span>{isUrdu ? "کیش آن ڈیلیوری" : "Cash on Delivery"}</span>
                   </div>
                 </div>
               </div>

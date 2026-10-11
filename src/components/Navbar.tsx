@@ -2,130 +2,90 @@ import React, { useState } from "react";
 import { 
   Droplet, 
   Sparkles, 
-  ShieldCheck, 
   ShoppingBag, 
-  Phone, 
   Search, 
   Menu, 
   X, 
   MessageCircle, 
-  HelpCircle, 
-  Award,
-  BookOpen,
-  MapPin,
-  User as UserIcon,
-  LogOut,
-  Truck
+  Truck, 
+  Flame, 
+  Wheat, 
+  Building2,
+  Gift
 } from "lucide-react";
 import { StoreConfig } from "../data/storeConfig";
-import { User } from "firebase/auth";
 
 interface NavbarProps {
   cartCount: number;
   onOpenCart: () => void;
-  onOpenAffiliate?: () => void;
   onOpenOrderTracking?: () => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   activeSection: string;
   scrollToSection: (sectionId: string) => void;
   storeConfig: StoreConfig;
-  user?: User | null;
-  onSignIn?: () => void;
-  onSignOut?: () => void;
+  onSelectCategory?: (category: "all" | "oils" | "spices" | "flour") => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   cartCount,
   onOpenCart,
-  onOpenAffiliate,
   onOpenOrderTracking,
   searchQuery,
   setSearchQuery,
   activeSection,
   scrollToSection,
   storeConfig,
-  user,
-  onSignIn,
-  onSignOut,
+  onSelectCategory,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
-  const affRate = storeConfig.affiliateCommissionRate ?? 10;
-  const freeThreshold = storeConfig.freeDeliveryThreshold ?? 2500;
-  const hasFreeShip = storeConfig.enableFreeDeliveryAboveThreshold ?? true;
-
-  const navLinks = [
-    { id: "products", label: "Pure Oils / پروڈکٹس" },
-    { id: "order-form", label: "⚡ فوری آرڈر فارم (Quick Order)" },
-    { id: "reviews", label: "Reviews / تاثرات" },
-    ...(onOpenOrderTracking ? [{ id: "tracking", label: "Track Order / ٹریک کریں", action: onOpenOrderTracking }] : []),
-  ];
-
-  const handleNavClick = (link: { id: string; label: string; action?: () => void }) => {
+  const handleCategoryClick = (cat: "all" | "oils" | "spices" | "flour") => {
     setIsMobileMenuOpen(false);
-    if (link.action) {
-      link.action();
-    } else {
-      scrollToSection(link.id);
-    }
+    onSelectCategory?.(cat);
+    scrollToSection("products");
+  };
+
+  const handleNavClick = (sectionId: string) => {
+    setIsMobileMenuOpen(false);
+    scrollToSection(sectionId);
   };
 
   return (
-    <header 
-      className="sticky top-0 z-40 text-white backdrop-blur-md border-b shadow-lg transition-colors duration-300"
-      style={{
-        backgroundColor: "var(--theme-header-bg, #291305)",
-        borderColor: "var(--theme-border, #fde68a)",
-      }}
-    >
-      {/* Top Announcement Bar */}
-      <div 
-        className="text-xs px-4 py-1.5 border-b"
-        style={{
-          backgroundColor: "rgba(0, 0, 0, 0.25)",
-          borderColor: "rgba(255, 255, 255, 0.1)",
-          color: "rgba(255, 255, 255, 0.9)"
-        }}
-      >
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs transition-colors duration-200">
+      {/* Top Notification Announcement Bar */}
+      <div className="bg-emerald-800 text-white text-xs px-4 py-1.5 border-b border-emerald-900">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap">
-            <span 
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold text-white shadow-xs"
-              style={{ backgroundColor: "var(--theme-primary, #b45309)" }}
-            >
-              <Sparkles className="w-3 h-3 text-amber-200" />
-              Cold Press Master Precision
+          <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap text-[11px] sm:text-xs">
+            <span className="inline-flex items-center gap-1 bg-emerald-900 text-emerald-200 px-2 py-0.5 rounded font-bold">
+              <Sparkles className="w-3 h-3 text-emerald-300" />
+              Cold-Pressed & Chemical-Free
             </span>
-            <span>100% Cold-Pressed in Food-Grade 304 Stainless Steel (&lt;42°C) • Zero Chemical Solvents</span>
-            <span className="hidden sm:inline font-bold" style={{ color: "var(--theme-accent, #f59e0b)" }}>
-              • {hasFreeShip ? `Free Shipping over Rs. ${freeThreshold}` : `Standard Delivery Rs. ${storeConfig.deliveryFee ?? 150}`}
-            </span>
+            <span>Free Home Delivery Across Pakistan on orders above Rs. 2,500!</span>
           </div>
 
-          <div className="flex items-center gap-3 text-[11px]">
+          <div className="flex items-center gap-4 text-[11px] sm:text-xs">
             {onOpenOrderTracking && (
               <button
                 id="top-track-order-btn"
                 onClick={onOpenOrderTracking}
-                className="inline-flex items-center gap-1 text-amber-200 hover:text-white font-semibold transition-colors cursor-pointer"
-                title="Track Live Order Status"
+                className="inline-flex items-center gap-1 text-emerald-100 hover:text-white font-medium transition-colors cursor-pointer"
               >
-                <Truck className="w-3.5 h-3.5 text-amber-400" />
+                <Truck className="w-3.5 h-3.5 text-emerald-300" />
                 <span>Track Order</span>
               </button>
             )}
+
             <a
               id="top-whatsapp-link"
-              href={`https://wa.me/${(storeConfig.whatsappNumber || "").replace(/[^0-9]/g, "")}?text=Hello%20Al%20Raza%20Oil%20Mart,%20I%20would%20like%20to%20inquire%20about%20pure%20cold-pressed%20oils.`}
+              href={`https://wa.me/${(storeConfig.whatsappNumber || "923292832225").replace(/[^0-9]/g, "")}?text=${encodeURIComponent("Hello! I would like to inquire about Al Raza cold pressed oils, spices, and chakki atta.")}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-emerald-300 hover:text-emerald-200 font-medium"
+              className="inline-flex items-center gap-1 text-emerald-200 hover:text-white font-medium"
             >
               <MessageCircle className="w-3.5 h-3.5" />
-              <span>WhatsApp Support ({storeConfig.contactPhone1})</span>
+              <span>WhatsApp: {storeConfig.contactPhone1}</span>
             </a>
           </div>
         </div>
@@ -134,112 +94,106 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Main Navbar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          {/* Brand Logo & Tagline */}
+          
+          {/* Brand Logo & Title */}
           <div 
-            className="flex items-center gap-3.5 cursor-pointer group"
-            onClick={() => scrollToSection("hero")}
+            className="flex items-center gap-3 cursor-pointer group"
+            onClick={() => handleNavClick("hero")}
           >
             {storeConfig.logoUrl && storeConfig.logoUrl.trim() !== "" ? (
               <img
                 src={storeConfig.logoUrl}
                 alt={storeConfig.brandName}
-                className="w-12 h-12 rounded-xl object-cover border border-white/20"
+                className="w-11 h-11 rounded-xl object-cover border border-slate-200 shadow-xs"
               />
             ) : (
-              <div 
-                className="w-12 h-12 rounded-xl flex items-center justify-center shadow-inner border border-white/20 group-hover:scale-105 transition-transform duration-300"
-                style={{ backgroundColor: "var(--theme-primary, #b45309)" }}
-              >
-                <div className="relative">
-                  <Droplet className="w-7 h-7 text-white fill-white" />
-                  <Sparkles className="w-3.5 h-3.5 text-amber-200 absolute -top-1 -right-1 animate-pulse" />
-                </div>
+              <div className="w-11 h-11 rounded-xl bg-emerald-700 flex items-center justify-center text-white shadow-xs group-hover:bg-emerald-800 transition-colors">
+                <Droplet className="w-6 h-6 fill-white" />
               </div>
             )}
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-serif text-2xl font-bold tracking-wider text-white group-hover:opacity-90 transition-opacity">
+                <span className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 group-hover:text-emerald-700 transition-colors">
                   {storeConfig.brandName}
                 </span>
-                {storeConfig.brandBadge && (
-                  <span 
-                    className="border text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded text-white"
-                    style={{ 
-                      backgroundColor: "var(--theme-primary, #b45309)",
-                      borderColor: "var(--theme-accent, #f59e0b)"
-                    }}
-                  >
-                    {storeConfig.brandBadge}
-                  </span>
-                )}
+                <span className="hidden sm:inline-block bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] uppercase font-bold px-1.5 py-0.5 rounded">
+                  Organic Pantry
+                </span>
               </div>
-              <p 
-                className="text-[11px] uppercase tracking-widest font-medium"
-                style={{ color: "var(--theme-accent, #f59e0b)" }}
-              >
+              <p className="text-[11px] text-slate-500 font-medium line-clamp-1">
                 {storeConfig.brandTagline}
               </p>
             </div>
           </div>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-1.5 text-sm font-medium">
+          <nav className="hidden lg:flex items-center gap-1.5 text-sm font-semibold">
+            {/* Oils Section */}
             <button
-              id="nav-products-btn"
-              onClick={() => scrollToSection("products")}
-              className="px-3.5 py-2 rounded-lg transition-all cursor-pointer font-medium hover:bg-white/10 text-white"
-              style={{
-                backgroundColor: activeSection === "products" ? "var(--theme-primary, #15803d)" : "transparent",
-              }}
+              id="nav-section-oils"
+              onClick={() => handleCategoryClick("oils")}
+              className="px-3.5 py-2 rounded-xl text-slate-700 hover:text-emerald-700 hover:bg-emerald-50 transition-all flex items-center gap-1.5 cursor-pointer"
             >
-              Pure Oils / پروڈکٹس
+              <Droplet className="w-4 h-4 text-emerald-600 fill-emerald-600/30" />
+              <span>Cold Pressed Oils</span>
             </button>
+
+            {/* Spices Section */}
             <button
-              id="nav-order-form-btn"
-              onClick={() => scrollToSection("order-form")}
-              className="px-3.5 py-2 rounded-lg transition-all cursor-pointer font-bold bg-amber-500 hover:bg-amber-600 text-stone-950 shadow-xs flex items-center gap-1"
+              id="nav-section-spices"
+              onClick={() => handleCategoryClick("spices")}
+              className="px-3.5 py-2 rounded-xl text-slate-700 hover:text-emerald-700 hover:bg-emerald-50 transition-all flex items-center gap-1.5 cursor-pointer"
             >
-              <span>⚡ فوری آرڈر فارم (Quick Order)</span>
+              <Flame className="w-4 h-4 text-amber-600" />
+              <span>Spices (Masalajat)</span>
             </button>
+
+            {/* Flour / Atta Section */}
             <button
-              id="nav-reviews-btn"
-              onClick={() => scrollToSection("reviews")}
-              className="px-3.5 py-2 rounded-lg transition-all cursor-pointer font-medium hover:bg-white/10 text-white"
+              id="nav-section-flour"
+              onClick={() => handleCategoryClick("flour")}
+              className="px-3.5 py-2 rounded-xl text-slate-700 hover:text-emerald-700 hover:bg-emerald-50 transition-all flex items-center gap-1.5 cursor-pointer"
             >
-              Customer Reviews
+              <Wheat className="w-4 h-4 text-amber-700" />
+              <span>Chakki Atta & Flour</span>
             </button>
-            {onOpenOrderTracking && (
-              <button
-                id="nav-track-order-btn"
-                onClick={onOpenOrderTracking}
-                className="px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer hover:bg-white/10 text-stone-200 hover:text-white border border-white/20 font-medium"
-              >
-                <Truck className="w-4 h-4 text-emerald-400" />
-                <span>Track Order</span>
-              </button>
-            )}
+
+            {/* Wholesale & Bulk Quantity Form Link */}
+            <button
+              id="nav-wholesale-btn"
+              onClick={() => handleNavClick("wholesale-bulk")}
+              className="px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+            >
+              <Building2 className="w-4 h-4 text-amber-700" />
+              <span>Wholesale & Bulk</span>
+            </button>
+
+            {/* Affiliate Program Link */}
+            <button
+              id="nav-affiliate-btn"
+              onClick={() => handleNavClick("affiliate-program")}
+              className="px-3.5 py-2 rounded-xl text-emerald-800 hover:bg-emerald-50 border border-emerald-200 font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <Gift className="w-4 h-4 text-emerald-600" />
+              <span>Affiliate (Earn 10%)</span>
+            </button>
           </nav>
 
-          {/* Right Action Icons & Cart */}
+          {/* Right Action Controls: Search & Cart */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Search Input / Toggle */}
+            
+            {/* Search Input Toggle */}
             <div className="relative">
               {isSearchOpen ? (
-                <div 
-                  className="flex items-center border rounded-lg px-2.5 py-1.5 w-48 sm:w-64"
-                  style={{
-                    backgroundColor: "rgba(0, 0, 0, 0.4)",
-                    borderColor: "var(--theme-border, #fde68a)"
-                  }}
-                >
-                  <Search className="w-4 h-4 shrink-0" style={{ color: "var(--theme-accent, #f59e0b)" }} />
+                <div className="flex items-center border border-slate-300 rounded-xl px-2.5 py-1.5 bg-white shadow-xs w-48 sm:w-64">
+                  <Search className="w-4 h-4 text-slate-400 shrink-0" />
                   <input
                     id="navbar-search-input"
                     type="text"
-                    placeholder="Search groundnut, coconut..."
+                    placeholder="Search oils, spices, atta..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-transparent border-none text-xs text-white placeholder-white/60 focus:outline-none ml-2"
+                    className="w-full bg-transparent border-none text-xs text-slate-900 placeholder-slate-400 focus:outline-none ml-2"
                     autoFocus
                   />
                   <button
@@ -247,7 +201,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       setIsSearchOpen(false);
                       setSearchQuery("");
                     }}
-                    className="text-white hover:opacity-80"
+                    className="text-slate-400 hover:text-slate-600"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -256,186 +210,104 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   id="navbar-search-toggle"
                   onClick={() => setIsSearchOpen(true)}
-                  className="p-2 text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
-                  title="Search Oils"
+                  className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                  title="Search products"
                 >
                   <Search className="w-5 h-5" />
                 </button>
               )}
             </div>
 
-            {/* User Auth Profile / Sign In */}
-            {user ? (
-              <div className="relative">
-                <button
-                  id="nav-user-profile-btn"
-                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center gap-1.5 p-1 sm:px-2.5 sm:py-1.5 rounded-lg border text-white hover:bg-white/10 transition-colors cursor-pointer"
-                  style={{
-                    backgroundColor: "rgba(0,0,0,0.25)",
-                    borderColor: "rgba(255,255,255,0.2)"
-                  }}
-                  title={user.displayName || user.email || "Account"}
-                >
-                  {user?.photoURL && user.photoURL.trim() !== "" ? (
-                    <img
-                      src={user.photoURL}
-                      alt={user.displayName || "User"}
-                      className="w-6 h-6 rounded-full border border-amber-300 object-cover"
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    <div className="w-6 h-6 rounded-full bg-amber-600 flex items-center justify-center text-xs font-bold text-white">
-                      {(user.displayName || user.email || "U").charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <span className="hidden md:inline text-xs font-medium max-w-[90px] truncate">
-                    {user.displayName?.split(" ")[0] || "Account"}
-                  </span>
-                </button>
-
-                {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 rounded-xl bg-stone-900 border border-amber-900/60 shadow-2xl p-2 z-50 animate-fadeIn">
-                    <div className="px-3 py-2 border-b border-stone-800">
-                      <p className="text-xs font-bold text-white truncate">{user.displayName || "Customer"}</p>
-                      <p className="text-[11px] text-stone-400 truncate">{user.email}</p>
-                    </div>
-                    <button
-                      id="nav-signout-btn"
-                      onClick={() => {
-                        setIsUserMenuOpen(false);
-                        onSignOut?.();
-                      }}
-                      className="w-full mt-1.5 flex items-center gap-2 px-3 py-2 text-xs text-rose-300 hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      <span>Sign Out</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <button
-                id="nav-signin-btn"
-                onClick={onSignIn}
-                className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border text-amber-200 hover:text-white hover:bg-amber-600/30 transition-colors cursor-pointer"
-                style={{
-                  backgroundColor: "rgba(0,0,0,0.25)",
-                  borderColor: "var(--theme-accent, #f59e0b)"
-                }}
-              >
-                <UserIcon className="w-4 h-4" />
-                <span>Sign In</span>
-              </button>
-            )}
-
-            {/* Shopping Cart Button */}
+            {/* Cart Button */}
             <button
               id="navbar-cart-btn"
               onClick={onOpenCart}
-              className="relative flex items-center gap-2 text-white font-bold text-sm px-4 py-2.5 rounded-xl shadow-md border hover:opacity-90 transition-all cursor-pointer"
-              style={{
-                backgroundColor: "var(--theme-primary, #b45309)",
-                borderColor: "var(--theme-accent, #f59e0b)",
-              }}
+              className="relative p-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl shadow-xs transition-colors cursor-pointer flex items-center gap-1.5 font-bold text-xs"
             >
-              <ShoppingBag className="w-5 h-5" />
-              <span className="hidden sm:inline font-semibold">Cart</span>
+              <ShoppingBag className="w-4 h-4" />
+              <span className="hidden sm:inline">Cart</span>
               {cartCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-emerald-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-stone-950 animate-bounce">
+                <span className="bg-amber-400 text-slate-950 font-extrabold text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
                   {cartCount}
                 </span>
               )}
             </button>
 
-            {/* Mobile Menu Toggle Button */}
+            {/* Mobile Hamburger Menu Toggle */}
             <button
               id="navbar-mobile-menu-toggle"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
+              className="p-2 lg:hidden text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+              aria-label="Toggle navigation"
             >
               {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
+
           </div>
+
         </div>
       </div>
 
       {/* Mobile Drawer Menu */}
       {isMobileMenuOpen && (
-        <div 
-          className="lg:hidden border-t px-4 pt-3 pb-6 space-y-3 animate-fadeIn"
-          style={{
-            backgroundColor: "var(--theme-header-bg, #291305)",
-            borderColor: "rgba(255,255,255,0.15)"
-          }}
-        >
-          <nav className="flex flex-col space-y-1">
-            {navLinks.map((link) => (
-              <button
-                key={link.id}
-                onClick={() => handleNavClick(link)}
-                className="text-left px-4 py-2.5 rounded-lg text-sm text-white hover:bg-white/10 font-medium transition-colors cursor-pointer"
-              >
-                {link.label}
-              </button>
-            ))}
-          </nav>
+        <div className="lg:hidden bg-white border-t border-slate-200 px-4 pt-3 pb-6 space-y-2 shadow-lg animate-fadeIn">
+          <div className="p-2 text-xs font-bold uppercase text-slate-400 tracking-wider">
+            Explore Categories
+          </div>
 
-          <div className="pt-3 border-t border-white/20 flex flex-col gap-2 text-xs">
-            {user ? (
-              <div className="flex items-center justify-between p-2 rounded-lg bg-black/30 border border-white/10">
-                <div className="flex items-center gap-2">
-                  {user?.photoURL && user.photoURL.trim() !== "" ? (
-                    <img src={user.photoURL} alt={user.displayName || "User"} className="w-7 h-7 rounded-full border border-amber-300" referrerPolicy="no-referrer" />
-                  ) : (
-                    <div className="w-7 h-7 rounded-full bg-amber-600 flex items-center justify-center font-bold text-white">
-                      {(user.displayName || user.email || "U").charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-xs font-bold text-white leading-tight">{user.displayName || "User"}</p>
-                    <p className="text-[10px] text-amber-200/80 leading-tight">{user.email}</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    onSignOut?.();
-                  }}
-                  className="text-xs text-rose-400 hover:text-rose-300 font-semibold px-2 py-1 bg-rose-950/40 rounded border border-rose-800/40"
-                >
-                  Sign Out
-                </button>
-              </div>
-            ) : (
+          <button
+            onClick={() => handleCategoryClick("oils")}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold text-slate-800 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+          >
+            <Droplet className="w-4 h-4 text-emerald-600" />
+            <span>Cold Pressed Oils</span>
+          </button>
+
+          <button
+            onClick={() => handleCategoryClick("spices")}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold text-slate-800 hover:bg-amber-50 hover:text-amber-700 transition-colors"
+          >
+            <Flame className="w-4 h-4 text-amber-600" />
+            <span>Spices & Masalajat</span>
+          </button>
+
+          <button
+            onClick={() => handleCategoryClick("flour")}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold text-slate-800 hover:bg-amber-50 hover:text-amber-800 transition-colors"
+          >
+            <Wheat className="w-4 h-4 text-amber-700" />
+            <span>Chakki Atta & Flour</span>
+          </button>
+
+          <div className="pt-2 border-t border-slate-100 space-y-2">
+            <button
+              onClick={() => handleNavClick("wholesale-bulk")}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-left text-sm font-bold text-amber-950 transition-colors"
+            >
+              <Building2 className="w-4 h-4 text-amber-700" />
+              <span>Wholesale & Bulk Quantity Supply</span>
+            </button>
+
+            <button
+              onClick={() => handleNavClick("affiliate-program")}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-left text-sm font-bold text-emerald-900 transition-colors"
+            >
+              <Gift className="w-4 h-4 text-emerald-600" />
+              <span>Affiliate Program (Earn 10%)</span>
+            </button>
+
+            {onOpenOrderTracking && (
               <button
                 onClick={() => {
                   setIsMobileMenuOpen(false);
-                  onSignIn?.();
+                  onOpenOrderTracking();
                 }}
-                className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs"
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
               >
-                <UserIcon className="w-4 h-4" />
-                <span>Sign in with Google</span>
+                <Truck className="w-4 h-4 text-slate-400" />
+                <span>Track Your Order</span>
               </button>
             )}
-
-            <a
-              href={`tel:${storeConfig.contactPhone1}`}
-              className="flex items-center gap-2 text-white py-1"
-            >
-              <Phone className="w-4 h-4" />
-              <span>Call Helpline: {storeConfig.contactPhone1}</span>
-            </a>
-            <a
-              href={`https://wa.me/${(storeConfig.whatsappNumber || "").replace(/[^0-9]/g, "")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-emerald-400 py-1 font-medium"
-            >
-              <MessageCircle className="w-4 h-4" />
-              <span>Direct WhatsApp Order</span>
-            </a>
           </div>
         </div>
       )}

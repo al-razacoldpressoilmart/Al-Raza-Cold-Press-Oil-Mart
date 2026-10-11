@@ -1,4 +1,4 @@
-export type CategoryType = "all" | "cooking" | "wellness" | "beauty" | "bundles";
+export type CategoryType = "all" | "oils" | "spices" | "flour" | "bundles" | "cooking" | "wellness" | "beauty";
 
 export interface OilSizeOption {
   size: string; // e.g. "250ml", "500ml", "1 Litre", "5 Litre Canister"
@@ -42,7 +42,7 @@ export interface Product {
   id: string;
   name: string;
   nativeName: string;
-  category: "cooking" | "wellness" | "beauty" | "bundles";
+  category: "oils" | "spices" | "flour" | "bundles" | "cooking" | "wellness" | "beauty";
   tag: string;
   description: string;
   shortDescription: string;
@@ -63,6 +63,7 @@ export interface Product {
   badge?: string;
   featured?: boolean;
   totalStock?: number;
+  isOutOfStock?: boolean; // Owner toggled out-of-stock flag
 }
 
 export interface CartItem {
@@ -86,7 +87,7 @@ export interface BatchTestReport {
   artificialColor: string;
   labCertificateNo: string;
   testingLab: string;
-  status: "Passed - 100% Pure Virgin Grade" | "Verified";
+  status: "Passed - Virgin Grade" | "Verified";
 }
 
 export interface Recipe {
@@ -114,6 +115,7 @@ export interface AffiliatePartner {
   platform?: string;
   referralCode: string;
   status: "active" | "pending" | "suspended";
+  totalOrders?: number;
   totalSales?: number;
   totalEarnings?: number;
   pendingPayout?: number;

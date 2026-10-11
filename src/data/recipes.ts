@@ -146,7 +146,7 @@ export const REVIEWS = [
     rating: 5,
     date: "August 2026",
     oil: "Cold Pressed Black Seed (Kalonji) Oil",
-    content: "Their Kalonji oil is the real deal! The natural dark amber hue and strong thymoquinone pungency prove it is 100% unadulterated. Taking half a spoon every morning cleared up my seasonal allergic sinus issues in three weeks.",
+    content: "Their Kalonji oil is the real deal! The natural dark amber hue and strong thymoquinone pungency prove it is completely unadulterated. Taking half a spoon every morning cleared up my seasonal allergic sinus issues in three weeks.",
     verified: true,
   },
   {

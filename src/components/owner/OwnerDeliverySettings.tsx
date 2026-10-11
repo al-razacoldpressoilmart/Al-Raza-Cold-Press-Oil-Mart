@@ -48,7 +48,7 @@ export const OwnerDeliverySettings: React.FC<OwnerDeliverySettingsProps> = ({
       freeDeliveryThreshold: Number(form.freeDeliveryThreshold) || 2500,
       enableFreeDeliveryAboveThreshold: form.enableFreeDeliveryAboveThreshold ?? true,
       deliveryEstimatedDays: form.deliveryEstimatedDays?.trim() || "2-3 Working Days",
-      deliveryPolicyNote: form.deliveryPolicyNote?.trim() || "100% Unbroken Glass Safe Delivery Guarantee",
+      deliveryPolicyNote: form.deliveryPolicyNote?.trim() || "Unbroken Glass Safe Delivery Guarantee",
     };
 
     setTimeout(() => {
@@ -139,7 +139,7 @@ export const OwnerDeliverySettings: React.FC<OwnerDeliverySettingsProps> = ({
                 />
               </div>
               <p className="text-[11px] text-stone-400">
-                Orders with cart total at or above this amount will automatically qualify for 100% FREE delivery.
+                Orders with cart total at or above this amount will automatically qualify for FREE delivery.
               </p>
             </div>
 
@@ -194,9 +194,9 @@ export const OwnerDeliverySettings: React.FC<OwnerDeliverySettingsProps> = ({
               </label>
               <input
                 type="text"
-                value={form.deliveryPolicyNote || "100% Unbroken Glass Safe Delivery Guarantee"}
+                value={form.deliveryPolicyNote || "Unbroken Glass Safe Delivery Guarantee"}
                 onChange={(e) => setForm({ ...form, deliveryPolicyNote: e.target.value })}
-                placeholder="e.g. 100% Leak-Proof & Unbroken Glass Bottle Safe Guarantee"
+                placeholder="e.g. Leak-Proof & Unbroken Glass Bottle Safe Guarantee"
                 className="w-full p-2.5 bg-stone-900 border border-stone-700 rounded-xl text-white focus:outline-none focus:border-amber-500"
               />
             </div>

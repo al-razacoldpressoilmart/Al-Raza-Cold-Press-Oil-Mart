@@ -64,7 +64,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   );
 
   const stockQty = currentSize.stockQuantity ?? 10;
-  const isOutOfStock = !currentSize.inStock || stockQty <= 0;
+  const isOutOfStock = !!product.isOutOfStock || !currentSize.inStock || stockQty <= 0;
   const isLowStock = !isOutOfStock && stockQty <= (currentSize.lowStockThreshold || 5);
 
   // Filter reviews for this product
@@ -257,7 +257,7 @@ Salam Al Raza Mart! I would like to order this item directly via WhatsApp. Pleas
                     <div className="flex items-center justify-between">
                       <span className="font-bold flex items-center gap-1.5">
                         <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                        100% Pure & Cold-Pressed Quality
+                        Fresh Cold-Pressed Quality Guarantee
                       </span>
                     </div>
                     <p className="text-[11px] opacity-85">
@@ -629,7 +629,7 @@ Salam Al Raza Mart! I would like to order this item directly via WhatsApp. Pleas
                     <p className="text-[10px] opacity-75 mt-0.5">{productReviews.length} Ratings</p>
                   </div>
                   <div className="border-l pl-4 text-xs space-y-0.5" style={{ borderColor: "var(--theme-border, #fde68a)" }}>
-                    <p className="font-bold">100% Genuine Verified Customer Reviews</p>
+                    <p className="font-bold">Authentic Verified Customer Reviews</p>
                     <p className="text-[11px] opacity-80">Share your experience with aroma, taste, culinary use, or wellness benefits.</p>
                   </div>
                 </div>

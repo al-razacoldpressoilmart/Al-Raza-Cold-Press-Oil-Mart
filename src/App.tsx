@@ -7,7 +7,8 @@ import { INITIAL_REVIEWS } from "./data/reviews";
 import { Navbar } from "./components/Navbar";
 import { HeroBanner } from "./components/HeroBanner";
 import { ProductCatalog } from "./components/ProductCatalog";
-import { WordPressOrderForm } from "./components/WordPressOrderForm";
+import { WholesaleBulkOrderForm } from "./components/WholesaleBulkOrderForm";
+import { AffiliateProgramSection } from "./components/AffiliateProgramSection";
 import { ReviewsSection } from "./components/ReviewsSection";
 import { ProductDetailModal } from "./components/ProductDetailModal";
 import { CartDrawer } from "./components/CartDrawer";
@@ -18,6 +19,7 @@ import { OrderTrackingModal } from "./components/OrderTrackingModal";
 import { FloatingWhatsAppButton } from "./components/FloatingWhatsAppButton";
 import { AuthModal } from "./components/AuthModal";
 import { NotificationManager } from "./utils/NotificationManager";
+import { Language } from "./utils/translations";
 import { CheckCircle2, Shield, Settings, Sparkles, X } from "lucide-react";
 import { auth, logOutUser } from "./lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
@@ -95,6 +97,31 @@ export default function App() {
     }
   });
 
+  // Language state (English as primary default, with Urdu toggle option)
+  const [language, setLanguage] = useState<Language>(() => {
+    try {
+      const saved = localStorage.getItem("alraza_lang");
+      return saved === "ur" ? "ur" : "en";
+    } catch {
+      return "en";
+    }
+  });
+
+  const handleToggleLanguage = () => {
+    setLanguage((prev) => {
+      const next = prev === "ur" ? "en" : "ur";
+      try {
+        localStorage.setItem("alraza_lang", next);
+      } catch (e) {
+        console.warn(e);
+      }
+      return next;
+    });
+  };
+
+  // Selected Category filter (all, oils, spices, flour)
+  const [selectedCategory, setSelectedCategory] = useState<"all" | "oils" | "spices" | "flour">("all");
+
   // Navigation & Search state
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [activeSection, setActiveSection] = useState<string>("hero");
@@ -115,18 +142,9 @@ export default function App() {
     setIsOrderTrackingOpen(true);
   };
 
-  // Pre-selected product for WordPress Quick Order Form
-  const [preSelectedOrderProduct, setPreSelectedOrderProduct] = useState<{
-    product: Product;
-    sizeIndex: number;
-  } | null>(null);
-
   const handleBuyNow = (product: Product, sizeIndex: number) => {
-    setPreSelectedOrderProduct({ product, sizeIndex });
-    const orderFormEl = document.getElementById("order-form");
-    if (orderFormEl) {
-      orderFormEl.scrollIntoView({ behavior: "smooth" });
-    }
+    handleAddToCart(product, sizeIndex, 1);
+    setIsCheckoutOpen(true);
   };
 
   // Cart State (Persisted in localStorage)
@@ -712,32 +730,27 @@ export default function App() {
 
   return (
     <div 
-      className="min-h-screen flex flex-col font-sans relative transition-colors duration-400"
+      className={`min-h-screen flex flex-col font-sans relative bg-white text-slate-900 transition-colors duration-200 ${language === "ur" ? "font-urdu" : ""}`}
+      dir={language === "ur" ? "rtl" : "ltr"}
       style={{
-        backgroundColor: "var(--theme-bg-main, #fffbeb)",
-        color: "var(--theme-text, #451a03)",
+        backgroundColor: "#ffffff",
+        color: "#0f172a",
       }}
     >
       {/* Toast Notification Container */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 animate-bounce duration-300 max-w-sm">
-          <div 
-            className="text-white rounded-2xl p-4 shadow-2xl flex items-start gap-3 border"
-            style={{
-              backgroundColor: "var(--theme-header-bg, #291305)",
-              borderColor: "var(--theme-border, #fde68a)"
-            }}
-          >
+          <div className="text-white rounded-2xl p-4 shadow-xl flex items-start gap-3 bg-slate-900 border border-slate-700">
             <div className="p-1.5 bg-emerald-800 rounded-lg text-emerald-200 mt-0.5">
               <CheckCircle2 className="w-4 h-4" />
             </div>
             <div className="flex-1 text-xs">
               <p className="font-bold text-sm text-white">{toastMessage.title}</p>
-              {toastMessage.desc && <p className="text-amber-200/90 mt-0.5">{toastMessage.desc}</p>}
+              {toastMessage.desc && <p className="text-slate-300 mt-0.5">{toastMessage.desc}</p>}
             </div>
             <button
               onClick={() => setToastMessage(null)}
-              className="text-amber-400 hover:text-white p-1"
+              className="text-slate-400 hover:text-white p-1"
             >
               <X className="w-4 h-4" />
             </button>
@@ -755,17 +768,19 @@ export default function App() {
         activeSection={activeSection}
         scrollToSection={scrollToSection}
         storeConfig={storeConfig}
-        user={user}
-        onSignIn={() => setIsAuthModalOpen(true)}
-        onSignOut={logOutUser}
+        onSelectCategory={(cat) => setSelectedCategory(cat)}
       />
 
       {/* Main Content Area */}
-      <main className="flex-1">
+      <main className="flex-1 bg-white">
         {/* Hero Section */}
         <HeroBanner
           onExploreProducts={() => scrollToSection("products")}
-          onQuickOrder={() => scrollToSection("order-form")}
+          onWholesale={() => scrollToSection("wholesale-bulk")}
+          onSelectCategory={(cat) => {
+            setSelectedCategory(cat);
+            scrollToSection("products");
+          }}
           storeConfig={storeConfig}
         />
 
@@ -777,20 +792,25 @@ export default function App() {
           onBuyNow={handleBuyNow}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
+          language={language}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
         />
 
-        {/* WordPress Style Simple Cash on Delivery Order Form */}
-        <WordPressOrderForm
-          products={products}
-          onOrderSuccess={handleOrderSuccess}
+        {/* Wholesale & Bulk Quantity Order Form */}
+        <WholesaleBulkOrderForm
           storeConfig={storeConfig}
-          preSelectedProduct={preSelectedOrderProduct}
-          onClearPreSelected={() => setPreSelectedOrderProduct(null)}
+          products={products}
+        />
+
+        {/* Affiliate & Partner Program */}
+        <AffiliateProgramSection
+          storeConfig={storeConfig}
         />
 
         {/* Customer Reviews & Trust Badges */}
         <div id="reviews">
-          <ReviewsSection reviews={reviews} />
+          <ReviewsSection reviews={reviews} language={language} />
         </div>
       </main>
 
@@ -798,9 +818,12 @@ export default function App() {
       <Footer
         onOpenOrderTracking={handleOpenOrderTracking}
         storeConfig={storeConfig}
-        activeThemeId={activeThemeId}
-        onChangeTheme={handleChangeTheme}
         onOpenOwnerPanel={() => setIsOwnerPanelOpen(true)}
+        scrollToSection={scrollToSection}
+        onSelectCategory={(cat) => {
+          setSelectedCategory(cat);
+          scrollToSection("products");
+        }}
       />
 
       {/* Modals & Drawers */}

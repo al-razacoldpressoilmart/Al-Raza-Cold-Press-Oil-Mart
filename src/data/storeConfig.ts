@@ -70,13 +70,13 @@ export interface StoreConfig {
 }
 
 export const DEFAULT_STORE_CONFIG: StoreConfig = {
-  brandName: "AL RAZA",
-  brandTagline: "Cold Press Oil Mart • Automatic Extraction",
-  brandBadge: "Pure",
-  heroTitle: "Pure, Unrefined",
-  heroHighlight: "Cold-Pressed Oils",
-  heroSubtitle: "Extracted fresh daily using advanced 304 Food-Grade Stainless Steel Automatic Cold Press Screw Extractor (<42°C). Retaining 100% of natural enzymes, plant antioxidants, aroma, and rich nutrients — free from chemical hexane solvents and refining heat.",
-  heroBadge: "Pure Cold Press • Food Grade 304 Steel",
+  brandName: "Al Raza Pure Mart",
+  brandTagline: "Cold-Pressed Oils, Fresh Ground Spices & Stone-Ground Chakki Atta",
+  brandBadge: "Cold Pressed & Natural",
+  heroTitle: "Pure Cold-Pressed Oils,",
+  heroHighlight: "Authentic Spices & Chakki Atta",
+  heroSubtitle: "Traditional stone-ground whole wheat chakki atta, slow cold-pressed virgin oils, and unadulterated ground spices delivered right to your doorstep with Cash on Delivery across Pakistan.",
+  heroBadge: "Unrefined, Natural & Chemical-Free",
   heroImage: ASSETS.heroOilsDisplay,
 
   contactPhone1: "03292832225",
@@ -104,9 +104,9 @@ export const DEFAULT_STORE_CONFIG: StoreConfig = {
   footerTopBannerBg: "#291809",
 
   // SEO Meta Defaults
-  metaTitle: "Al Raza Cold Press Oil Mart | 100% Pure & Fresh Organic Oils",
-  metaDescription: "Buy pure, unrefined cold-pressed oils extracted fresh daily under 42°C in food-grade 304 stainless steel machinery. 100% natural mustard, sesame, almond, black seed, coconut & olive oils.",
-  metaKeywords: "cold pressed oil, pure sarson ka tel, mustard oil, black seed kalonji oil, virgin coconut oil, almond oil, pure organic oil pakistan, kachi ghani, food grade cold press",
+  metaTitle: "Al Raza Cold Press Oil Mart | Natural Cold Pressed Oils & Spices",
+  metaDescription: "Buy unrefined cold-pressed oils extracted fresh daily under 42°C in food-grade 304 stainless steel machinery. Natural mustard, sesame, almond, black seed, coconut & olive oils.",
+  metaKeywords: "cold pressed oil, sarson ka tel, mustard oil, black seed kalonji oil, virgin coconut oil, almond oil, organic oil pakistan, kachi ghani, food grade cold press",
 
   // Delivery & Shipping Defaults
   deliveryFee: 150,

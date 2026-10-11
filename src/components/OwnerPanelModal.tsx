@@ -41,7 +41,12 @@ import {
   Download,
   FileSpreadsheet,
   Tag,
-  FileText
+  FileText,
+  Building2,
+  Droplet,
+  Flame,
+  Wheat,
+  Percent
 } from "lucide-react";
 import { Product, ProductReview, AffiliatePartner } from "../types";
 import { COLOR_THEMES, ColorTheme } from "../data/themes";
@@ -113,11 +118,29 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
     | "contacts"
     | "affiliates"
     | "seo"
+    | "wholesale"
   >("analytics");
 
   const [themeCategory, setThemeCategory] = useState<string>("all");
   const [themeSearch, setThemeSearch] = useState("");
   const [saveSuccessNotice, setSaveSuccessNotice] = useState<string | null>(null);
+
+  // Wholesale Bulk Inquiries state
+  const [wholesaleInquiries, setWholesaleInquiries] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem("alraza_wholesale_inquiries");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const reloadWholesaleInquiries = () => {
+    try {
+      const saved = localStorage.getItem("alraza_wholesale_inquiries");
+      if (saved) setWholesaleInquiries(JSON.parse(saved));
+    } catch {}
+  };
 
   // Inline Delete Confirmation States (replaces window.confirm for iframe reliability)
   const [confirmDeleteProdId, setConfirmDeleteProdId] = useState<string | null>(null);
@@ -441,54 +464,184 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
     setIsNewProduct(false);
   };
 
-  // Open Create New Product
-  const handleOpenCreateProduct = () => {
+  // Preset image collections for quick 1-click select
+  const SPICE_PRESET_IMAGES = [
+    { label: "Turmeric (Haldi)", url: "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=800&q=80" },
+    { label: "Red Chili (Lal Mirch)", url: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=800&q=80" },
+    { label: "Coriander (Dhaniya)", url: "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?auto=format&fit=crop&w=800&q=80" },
+    { label: "Garam Masala", url: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=800&q=80" },
+    { label: "Cumin (Zeera)", url: "https://images.unsplash.com/photo-1509358271058-acd22cc93898?auto=format&fit=crop&w=800&q=80" },
+    { label: "Black Pepper", url: "https://images.unsplash.com/photo-1509358271058-acd22cc93898?auto=format&fit=crop&w=800&q=80" },
+  ];
+
+  const FLOUR_PRESET_IMAGES = [
+    { label: "Chakki Atta", url: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80" },
+    { label: "Chana Besan", url: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=800&q=80" },
+    { label: "Makai Corn Flour", url: "https://images.unsplash.com/photo-1551782450-a2132b4ba21d?auto=format&fit=crop&w=800&q=80" },
+    { label: "Barley Jau Atta", url: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&w=800&q=80" },
+  ];
+
+  const OIL_PRESET_IMAGES = [
+    { label: "Mustard (Sarson)", url: ASSETS.mustardHero },
+    { label: "Olive (Zaitoon)", url: ASSETS.olivePlasticBottle },
+    { label: "Coconut (Nariyal)", url: ASSETS.coconutOil },
+    { label: "Sesame (Til)", url: ASSETS.sesameOil },
+    { label: "Black Seed (Kalonji)", url: ASSETS.kalonjiOil },
+    { label: "Sweet Almond", url: ASSETS.almondOil },
+  ];
+
+  // Open Create New Oil Product
+  const handleOpenCreateOil = () => {
     const newProd: Product = {
-      id: `ar-prod-${Date.now()}`,
-      name: "Pure Cold Pressed Mustard Oil",
-      nativeName: "Kachi Ghani Sarson Ka Tel",
-      category: "cooking",
-      tag: "Fresh Cold Press",
-      shortDescription: "100% pure cold extracted oil in food-grade sealed glass bottle.",
-      description: "Cold-pressed at strict low temperatures below 42°C in food-grade 304 stainless steel machinery. Retains all natural vitamins, antioxidants, and pure raw aroma.",
+      id: `ar-oil-${Date.now()}`,
+      name: "Cold Pressed Mustard (Sarson) Oil",
+      nativeName: "Kachi Ghani Sarson Oil",
+      category: "oils",
+      tag: "Fresh Cold Press • Virgin Grade",
+      shortDescription: "Slow cold extracted below 38°C in food-grade steel machinery. Natural aroma.",
+      description: "Traditional kachi ghani cold extracted oil retaining natural vitamins and antioxidants without chemical solvents or refining.",
       heroImage: ASSETS.mustardHero,
-      seedOrigin: "Premium Organic Cleaned Seeds",
-      woodType: "304 Food-Grade Stainless Steel Cold Screw Extractor",
-      extractionTemp: "Cold Extracted < 42°C",
-      smokePoint: "220°C / 428°F",
-      aromaTaste: "Pure, rich, natural, authentic aroma",
+      seedOrigin: "Punjab Selected Sun-Dried Seeds",
+      woodType: "Food-Grade Cold Screw Chamber",
+      extractionTemp: "Cold Pressed < 38°C",
+      smokePoint: "240°C",
+      aromaTaste: "Rich, pungent, authentic aroma",
       colorProfile: "Golden Amber",
-      batchNo: `AR-BAT-${new Date().getFullYear()}`,
+      batchNo: `AR-OIL-${new Date().getFullYear()}`,
       sizes: [
-        { size: "500ml Glass Bottle", price: 250, originalPrice: 300, inStock: true, stockQuantity: 25, lowStockThreshold: 5 },
-        { size: "1 Litre Pure Bottle", price: 480, originalPrice: 580, inStock: true, stockQuantity: 20, lowStockThreshold: 5 },
-        { size: "5 Litre Cold Press Canister", price: 2250, originalPrice: 2600, inStock: true, stockQuantity: 8, lowStockThreshold: 3 },
+        { size: "500ml Bottle", price: 340, originalPrice: 400, inStock: true, stockQuantity: 30, lowStockThreshold: 5 },
+        { size: "1 Litre Bottle", price: 650, originalPrice: 750, inStock: true, stockQuantity: 25, lowStockThreshold: 5 },
+        { size: "2 Litre Canister", price: 1250, originalPrice: 1450, inStock: true, stockQuantity: 15, lowStockThreshold: 5 },
+        { size: "5 Litre Canister", price: 3000, originalPrice: 3500, inStock: true, stockQuantity: 10, lowStockThreshold: 3 },
       ],
       benefits: [
-        "100% Unadulterated & Cold Pressed Below 42°C",
-        "Packed in Pure Glass Bottle with Tamper-Evident Seal",
-        "Zero Hexane, Bleach, Mineral Oil or Chemical Solvents",
-        "Retains Natural Omega-3 Fatty Acids & Pure Vitamin E"
+        "Chemical & Hexane Free",
+        "Packed in sealed food-grade containers",
+        "Natural Omega-3 and Vitamin E retained",
       ],
-      bestFor: [
-        "Daily heart-healthy cooking and traditional tempering (tadka)",
-        "Traditional Ayurvedic body massage and hair nourishment",
-      ],
+      bestFor: ["Daily Cooking & Tadka", "Achaar Preservation", "Hair & Scalp Nourishment"],
       nutrition: {
         caloriesPer100g: 884,
         monounsaturatedFat: "60g",
-        polyunsaturatedFat: "22g",
+        polyunsaturatedFat: "21g",
         saturatedFat: "12g",
-        vitaminE: "34mg",
-        omega3: "8.5g",
-        omega6: "15.2g",
-        antioxidants: "Natural Tocopherols & Sesamol",
+        vitaminE: "20mg",
+        omega3: "6g",
+        omega6: "15g",
+        antioxidants: "Allyl Isothiocyanate & Tocopherols",
       },
       rating: 5.0,
       reviewsCount: 1,
+      isOutOfStock: false,
     };
     setEditingProduct(newProd);
     setIsNewProduct(true);
+  };
+
+  // Open Create New Spice Product
+  const handleOpenCreateSpice = () => {
+    const newProd: Product = {
+      id: `ar-sp-${Date.now()}`,
+      name: "Pure Desi Turmeric (Haldi) Powder",
+      nativeName: "Pure Haldi Powder (Sabut Pisi)",
+      category: "spices",
+      tag: "High Curcumin • Chemical Free",
+      shortDescription: "Freshly stone-ground from hand-picked whole turmeric roots. Vibrant golden color and rich aroma.",
+      description: "Authentic ground spice prepared from cleaned whole roots. Free from synthetic yellow dyes, starch, or lead chromate.",
+      heroImage: "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=800&q=80",
+      seedOrigin: "Premium Organic Desi Whole Roots",
+      woodType: "Slow Stone-Grinding Mill",
+      extractionTemp: "Cold Ground Processing (< 30°C)",
+      smokePoint: "Culinary Spicing",
+      aromaTaste: "Warm, earthy, peppery authentic fragrance",
+      colorProfile: "Vibrant Golden Ochre",
+      batchNo: `AR-SP-${new Date().getFullYear()}`,
+      sizes: [
+        { size: "250 Gram Pack", price: 280, originalPrice: 340, inStock: true, stockQuantity: 50, lowStockThreshold: 10 },
+        { size: "500 Gram Pack", price: 520, originalPrice: 620, inStock: true, stockQuantity: 40, lowStockThreshold: 10 },
+        { size: "1 KG Family Pack", price: 980, originalPrice: 1180, inStock: true, stockQuantity: 25, lowStockThreshold: 5 },
+      ],
+      benefits: [
+        "High active natural Curcumin content",
+        "Free of toxic artificial colors or polish",
+        "Deep authentic aroma and vibrant natural handi color",
+      ],
+      bestFor: ["Daily Handi & Salan Curries", "Golden Turmeric Milk", "Joint Wellness"],
+      nutrition: {
+        caloriesPer100g: 354,
+        monounsaturatedFat: "1.7g",
+        polyunsaturatedFat: "2.2g",
+        saturatedFat: "3.1g",
+        vitaminE: "3.1mg",
+        omega3: "0.2g",
+        omega6: "1.8g",
+        antioxidants: "Natural Curcuminoids",
+      },
+      rating: 5.0,
+      reviewsCount: 1,
+      isOutOfStock: false,
+    };
+    setEditingProduct(newProd);
+    setIsNewProduct(true);
+  };
+
+  // Open Create New Flour / Atta Product
+  const handleOpenCreateFlour = () => {
+    const newProd: Product = {
+      id: `ar-flr-${Date.now()}`,
+      name: "Whole Wheat Chakki Atta",
+      nativeName: "Stone-Ground Whole Wheat Atta",
+      category: "flour",
+      tag: "Stone Ground • Bran & Germ Intact",
+      shortDescription: "Fresh stone-ground from cleaned golden desi wheat kernels. High fiber, unbleached, makes soft rotis.",
+      description: "Traditional natural stone chakki ground flour. Operates at slow RPM to preserve full wheat germ and dietary bran. Makes rotis that stay soft and fluffy.",
+      heroImage: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80",
+      seedOrigin: "Selected Punjab Golden Wheat",
+      woodType: "Traditional Natural Stone Chakki",
+      extractionTemp: "Slow RPM Cold Stone Grinding",
+      smokePoint: "Baking & Roti Making",
+      aromaTaste: "Sweet, nutty, earthy whole wheat taste",
+      colorProfile: "Natural Creamy Tan with Visible Wheat Bran",
+      batchNo: `AR-FLR-${new Date().getFullYear()}`,
+      sizes: [
+        { size: "5 KG Bag", price: 680, originalPrice: 780, inStock: true, stockQuantity: 40, lowStockThreshold: 10 },
+        { size: "10 KG Bag", price: 1320, originalPrice: 1500, inStock: true, stockQuantity: 35, lowStockThreshold: 10 },
+        { size: "20 KG Family Sack", price: 2550, originalPrice: 2900, inStock: true, stockQuantity: 20, lowStockThreshold: 5 },
+      ],
+      benefits: [
+        "Unrefined with dietary bran (choker) fully intact",
+        "Zero maida, zero chemical bleaching agents",
+        "Makes soft, delicious, digestible rotis",
+      ],
+      bestFor: ["Daily Soft Home Phulkas & Rotis", "Desi Ghee Parathas", "Healthy Family Diet"],
+      nutrition: {
+        caloriesPer100g: 340,
+        monounsaturatedFat: "0.4g",
+        polyunsaturatedFat: "1.1g",
+        saturatedFat: "0.5g",
+        vitaminE: "1.2mg",
+        omega3: "0.1g",
+        omega6: "1.0g",
+        antioxidants: "Dietary Wheat Bran Fiber",
+      },
+      rating: 5.0,
+      reviewsCount: 1,
+      isOutOfStock: false,
+    };
+    setEditingProduct(newProd);
+    setIsNewProduct(true);
+  };
+
+  // Immediate 1-Click Out of Stock Toggle on Product Card
+  const handleToggleProductOutOfStock = (prod: Product) => {
+    const nextState = !prod.isOutOfStock;
+    const updated: Product = {
+      ...prod,
+      isOutOfStock: nextState,
+      sizes: prod.sizes.map((s) => ({ ...s, inStock: !nextState })),
+    };
+    onSaveProduct(updated);
+    showNotification(`"${prod.name}" marked ${nextState ? "OUT OF STOCK" : "IN STOCK"}!`);
   };
 
   // Save Product Changes
@@ -672,6 +825,18 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
               >
                 <ShoppingBag className="w-4 h-4" />
                 <span>Orders & Tracking ({orders.length})</span>
+              </button>
+
+              <button
+                onClick={() => { setActiveTab("wholesale"); setEditingProduct(null); reloadWholesaleInquiries(); }}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                  activeTab === "wholesale"
+                    ? "bg-amber-600 text-white shadow-md font-bold"
+                    : "text-stone-300 hover:bg-stone-900 hover:text-white"
+                }`}
+              >
+                <Building2 className="w-4 h-4 text-amber-400" />
+                <span>Wholesale Inquiries ({wholesaleInquiries.length})</span>
               </button>
 
               <button
@@ -1194,7 +1359,7 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                           <div className="p-2 rounded-lg text-[11px]" style={{
                             backgroundColor: configForm.footerTopBannerBg || "rgba(0,0,0,0.2)"
                           }}>
-                            <span>Cold Press Extractor • 100% Zero Hexane Chemicals • Fresh Daily Pressing</span>
+                            <span>Cold Press Extractor • Zero Hexane Chemicals • Fresh Daily Pressing</span>
                           </div>
                           <p className="text-[11px] opacity-85">
                             Dedicated to delivering pure, unadulterated cold-pressed oils. Retaining raw aroma and potency.
@@ -1238,10 +1403,10 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                 </div>
               )}
 
-              {/* TAB 5: PRODUCTS CATALOG WITH ACTIVE DELETE & EDIT */}
+              {/* TAB 5: PRODUCTS CATALOG WITH OUT OF STOCK, CATEGORY ADDING & PRESETS */}
               {activeTab === "products" && (
                 <div className="space-y-6">
-                  {/* Header & Add Button */}
+                  {/* Header & Add Buttons for Oils, Spices, and Flour */}
                   <div className="flex flex-wrap items-center justify-between gap-3 bg-stone-950 p-4 rounded-2xl border border-amber-900/30">
                     <div>
                       <h3 className="font-serif text-lg font-bold text-amber-200 flex items-center gap-2">
@@ -1249,17 +1414,38 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                         Product Catalog & Packaging Manager
                       </h3>
                       <p className="text-xs text-stone-400">
-                        Add, edit pictures, update prices & discounts, set stock levels, or permanently delete items.
+                        Add spices, flours or oils with details, pictures & prices. Manage live stock levels or toggle Out of Stock.
                       </p>
                     </div>
 
-                    <button
-                      onClick={handleOpenCreateProduct}
-                      className="px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>Add New Cold Pressed Oil</span>
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleOpenCreateOil}
+                        className="px-3.5 py-2 bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer transition-all border border-emerald-600"
+                      >
+                        <Droplet className="w-3.5 h-3.5" />
+                        <span>+ Add Oil</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleOpenCreateSpice}
+                        className="px-3.5 py-2 bg-amber-700 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer transition-all border border-amber-500"
+                      >
+                        <Flame className="w-3.5 h-3.5" />
+                        <span>+ Add Spice (Masala)</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleOpenCreateFlour}
+                        className="px-3.5 py-2 bg-stone-800 hover:bg-stone-700 text-amber-200 font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer transition-all border border-amber-700"
+                      >
+                        <Wheat className="w-3.5 h-3.5" />
+                        <span>+ Add Flour (Atta)</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Product Edit / Create Form Modal */}
@@ -1271,34 +1457,78 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                       <div className="flex items-center justify-between pb-3 border-b border-stone-800">
                         <h4 className="font-serif font-bold text-sm text-amber-300 flex items-center gap-2">
                           <Edit className="w-4 h-4" />
-                          <span>{isNewProduct ? "Create New Product" : `Edit Product: ${editingProduct.name}`}</span>
+                          <span>{isNewProduct ? `Create New ${editingProduct.category.toUpperCase()}` : `Edit Product: ${editingProduct.name}`}</span>
                         </h4>
                         <button
                           type="button"
                           onClick={() => setEditingProduct(null)}
-                          className="p-1 text-stone-400 hover:text-white rounded"
+                          className="p-1 text-stone-400 hover:text-white rounded cursor-pointer"
                         >
                           ✕
                         </button>
                       </div>
 
-                      {/* Product Name & Native Name */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      {/* Out of Stock Master Control */}
+                      <div className="p-3 bg-stone-900 rounded-xl border border-stone-800 flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <PackageX className="w-5 h-5 text-rose-400" />
+                          <div>
+                            <span className="font-bold text-xs text-rose-200">
+                              Mark Entire Product as OUT OF STOCK
+                            </span>
+                            <p className="text-[11px] text-stone-400 mt-0.5">
+                              When enabled, shows an "Out of Stock" red badge on the storefront and disables the Add to Cart button.
+                            </p>
+                          </div>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={!!editingProduct.isOutOfStock}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              setEditingProduct({
+                                ...editingProduct,
+                                isOutOfStock: checked,
+                                sizes: editingProduct.sizes.map((s) => ({ ...s, inStock: !checked })),
+                              });
+                            }}
+                            className="w-5 h-5 accent-rose-600 rounded cursor-pointer"
+                          />
+                        </label>
+                      </div>
+
+                      {/* Product Category, Name & Subtitle */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                        <div>
+                          <label className="block font-semibold text-stone-300 mb-1">Category *</label>
+                          <select
+                            value={editingProduct.category}
+                            onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value as any })}
+                            className="w-full p-2.5 rounded-xl bg-stone-900 border border-stone-700 text-white font-bold focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer"
+                          >
+                            <option value="oils">Cold Pressed Oils (تیل جات)</option>
+                            <option value="spices">Spices & Masalajat (مصالحہ جات)</option>
+                            <option value="flour">Chakki Atta & Flour (چکی آٹا اور اناج)</option>
+                          </select>
+                        </div>
                         <div>
                           <label className="block font-semibold text-stone-300 mb-1">Product Title *</label>
                           <input
                             type="text"
                             required
+                            placeholder="e.g. Pure Desi Turmeric (Haldi) Powder"
                             value={editingProduct.name || ""}
                             onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
                             className="w-full p-2.5 rounded-xl bg-stone-900 border border-stone-700 text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
                           />
                         </div>
                         <div>
-                          <label className="block font-semibold text-stone-300 mb-1">Native / Urdu Name *</label>
+                          <label className="block font-semibold text-stone-300 mb-1">Variety / Subtitle *</label>
                           <input
                             type="text"
                             required
+                            placeholder="e.g. Sabut Pisi Haldi / Stone Ground"
                             value={editingProduct.nativeName || ""}
                             onChange={(e) => setEditingProduct({ ...editingProduct, nativeName: e.target.value })}
                             className="w-full p-2.5 rounded-xl bg-stone-900 border border-stone-700 text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
@@ -1306,9 +1536,11 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                         </div>
                       </div>
 
-                      {/* Picture URL & Device Upload */}
-                      <div className="p-3.5 bg-stone-900 rounded-xl border border-stone-800 space-y-2 text-xs">
-                        <label className="block font-bold text-amber-300">Product Picture (URL or Upload from Device):</label>
+                      {/* Picture URL, Device Upload & Quick Presets */}
+                      <div className="p-3.5 bg-stone-900 rounded-xl border border-stone-800 space-y-2.5 text-xs">
+                        <label className="block font-bold text-amber-300">
+                          Product Picture (URL, Device Upload, or 1-Click Preset):
+                        </label>
                         <div className="flex items-center gap-2">
                           <input
                             type="text"
@@ -1339,6 +1571,35 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                           </button>
                         </div>
 
+                        {/* Quick Presets for Current Category */}
+                        <div className="pt-1 space-y-1">
+                          <span className="text-[10px] text-stone-400 font-semibold block">
+                            Quick Picture Presets for {editingProduct.category.toUpperCase()}:
+                          </span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {(editingProduct.category === "spices"
+                              ? SPICE_PRESET_IMAGES
+                              : editingProduct.category === "flour"
+                              ? FLOUR_PRESET_IMAGES
+                              : OIL_PRESET_IMAGES
+                            ).map((preset, pIdx) => (
+                              <button
+                                key={pIdx}
+                                type="button"
+                                onClick={() => setEditingProduct({ ...editingProduct, heroImage: preset.url })}
+                                className={`px-2.5 py-1 rounded-lg text-[10px] font-medium flex items-center gap-1.5 cursor-pointer border ${
+                                  editingProduct.heroImage === preset.url
+                                    ? "bg-amber-600 text-white border-amber-500 font-bold"
+                                    : "bg-stone-950 hover:bg-stone-800 text-stone-300 border-stone-700"
+                                }`}
+                              >
+                                <img src={preset.url} alt="" className="w-4 h-4 rounded object-cover" />
+                                <span>{preset.label}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
                         {editingProduct.heroImage && editingProduct.heroImage.trim() !== "" && (
                           <div className="flex items-center gap-3 pt-1">
                             <img
@@ -1357,6 +1618,7 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                           <label className="block font-semibold text-stone-300 mb-1">Short Description</label>
                           <input
                             type="text"
+                            placeholder="e.g. Freshly stone-ground from hand-selected pure roots. Zero dyes."
                             value={editingProduct.shortDescription || ""}
                             onChange={(e) => setEditingProduct({ ...editingProduct, shortDescription: e.target.value })}
                             className="w-full p-2 rounded-xl bg-stone-900 border border-stone-700 text-white"
@@ -1365,7 +1627,8 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                         <div>
                           <label className="block font-semibold text-stone-300 mb-1">Full Detailed Description</label>
                           <textarea
-                            rows={3}
+                            rows={2}
+                            placeholder="Detailed sourcing, grinding method, aroma, and packaging description..."
                             value={editingProduct.description || ""}
                             onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
                             className="w-full p-2 rounded-xl bg-stone-900 border border-stone-700 text-white"
@@ -1375,12 +1638,32 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
 
                       {/* Sizes, Pricing & Stock */}
                       <div className="space-y-2 text-xs">
-                        <label className="block font-bold text-amber-300">Sizes, Prices & Stock Inventory:</label>
+                        <div className="flex items-center justify-between">
+                          <label className="block font-bold text-amber-300">Sizes, Prices & Stock Inventory:</label>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const defaultSize = editingProduct.category === "spices" ? "250 Gram Pack" : editingProduct.category === "flour" ? "5 KG Bag" : "1 Litre Bottle";
+                              setEditingProduct({
+                                ...editingProduct,
+                                sizes: [
+                                  ...editingProduct.sizes,
+                                  { size: defaultSize, price: 500, originalPrice: 600, inStock: true, stockQuantity: 25, lowStockThreshold: 5 },
+                                ],
+                              });
+                            }}
+                            className="px-2.5 py-1 bg-amber-700 hover:bg-amber-600 text-white font-bold rounded-lg text-[10px] cursor-pointer flex items-center gap-1"
+                          >
+                            <Plus className="w-3 h-3" />
+                            <span>Add Size / Weight Row</span>
+                          </button>
+                        </div>
+
                         <div className="space-y-2">
                           {editingProduct.sizes.map((sz, idx) => (
-                            <div key={idx} className="p-2.5 bg-stone-900 rounded-xl border border-stone-800 grid grid-cols-1 sm:grid-cols-4 gap-2">
+                            <div key={idx} className="p-2.5 bg-stone-900 rounded-xl border border-stone-800 grid grid-cols-1 sm:grid-cols-5 gap-2 items-center">
                               <div>
-                                <label className="text-[10px] text-stone-400 block">Size Name</label>
+                                <label className="text-[10px] text-stone-400 block">Size / Weight</label>
                                 <input
                                   type="text"
                                   value={sz.size || ""}
@@ -1406,7 +1689,7 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                                 />
                               </div>
                               <div>
-                                <label className="text-[10px] text-stone-400 block">MRP Original (Rs.)</label>
+                                <label className="text-[10px] text-stone-400 block">MRP (Rs.)</label>
                                 <input
                                   type="number"
                                   value={sz.originalPrice ?? 0}
@@ -1419,18 +1702,47 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                                 />
                               </div>
                               <div>
-                                <label className="text-[10px] text-stone-400 block">Stock Qty (Units)</label>
+                                <label className="text-[10px] text-stone-400 block">Stock (Units)</label>
                                 <input
                                   type="number"
                                   value={sz.stockQuantity ?? 10}
                                   onChange={(e) => {
                                     const nextSizes = [...editingProduct.sizes];
-                                    nextSizes[idx].stockQuantity = Number(e.target.value);
-                                    nextSizes[idx].inStock = Number(e.target.value) > 0;
+                                    const qty = Number(e.target.value);
+                                    nextSizes[idx].stockQuantity = qty;
+                                    nextSizes[idx].inStock = qty > 0;
                                     setEditingProduct({ ...editingProduct, sizes: nextSizes });
                                   }}
                                   className="w-full p-1.5 bg-stone-950 border border-stone-700 rounded text-xs text-white font-bold"
                                 />
+                              </div>
+                              <div className="flex items-center justify-between pt-3 sm:pt-0">
+                                <label className="flex items-center gap-1.5 text-[10px] text-stone-300 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={sz.inStock && (sz.stockQuantity ?? 0) > 0}
+                                    onChange={(e) => {
+                                      const nextSizes = [...editingProduct.sizes];
+                                      nextSizes[idx].inStock = e.target.checked;
+                                      setEditingProduct({ ...editingProduct, sizes: nextSizes });
+                                    }}
+                                    className="w-3.5 h-3.5 accent-emerald-500 rounded"
+                                  />
+                                  <span>In Stock</span>
+                                </label>
+                                {editingProduct.sizes.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const nextSizes = editingProduct.sizes.filter((_, sIndex) => sIndex !== idx);
+                                      setEditingProduct({ ...editingProduct, sizes: nextSizes });
+                                    }}
+                                    className="p-1 text-rose-400 hover:text-rose-300 rounded cursor-pointer"
+                                    title="Delete size row"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
                               </div>
                             </div>
                           ))}
@@ -1492,72 +1804,212 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                     </form>
                   )}
 
-                  {/* Product Cards List */}
+                  {/* Product Cards List with Out-Of-Stock Badges & 1-Click Toggle */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    {products.map((prod) => (
-                      <div
-                        key={prod.id}
-                        className="p-4 bg-stone-950 rounded-2xl border border-stone-800 flex flex-col justify-between space-y-3 hover:border-amber-700/50 transition-colors"
-                      >
-                        <div className="flex items-start gap-3">
-                          <img
-                            src={prod.heroImage && prod.heroImage.trim() !== "" ? prod.heroImage : ASSETS.olivePlasticBottle}
-                            alt={prod.name}
-                            className="w-16 h-16 rounded-xl object-cover border border-stone-700 shrink-0"
-                          />
-                          <div className="flex-1">
-                            <h4 className="font-serif font-bold text-sm text-white">{prod.name}</h4>
-                            <p className="text-xs text-amber-400 font-semibold">{prod.nativeName}</p>
-                            <p className="text-[11px] text-stone-400 mt-1 line-clamp-1">{prod.shortDescription}</p>
-                            <p className="text-[10px] text-emerald-400 mt-0.5">
-                              {prod.sizes.length} pack sizes • From Rs. {prod.sizes[0]?.price}
-                            </p>
+                    {products.map((prod) => {
+                      const isProductOut = prod.isOutOfStock || prod.sizes.every((s) => !s.inStock || (s.stockQuantity ?? 0) <= 0);
+
+                      return (
+                        <div
+                          key={prod.id}
+                          className={`p-4 bg-stone-950 rounded-2xl border flex flex-col justify-between space-y-3 transition-colors ${
+                            isProductOut
+                              ? "border-rose-800/80 bg-rose-950/20"
+                              : "border-stone-800 hover:border-amber-700/50"
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <img
+                              src={prod.heroImage && prod.heroImage.trim() !== "" ? prod.heroImage : ASSETS.olivePlasticBottle}
+                              alt={prod.name}
+                              className="w-16 h-16 rounded-xl object-cover border border-stone-700 shrink-0"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-1">
+                                <h4 className="font-serif font-bold text-sm text-white truncate">{prod.name}</h4>
+                                {isProductOut ? (
+                                  <span className="bg-rose-700 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 flex items-center gap-1">
+                                    <PackageX className="w-3 h-3" /> Out of Stock
+                                  </span>
+                                ) : (
+                                  <span className="bg-emerald-800 text-emerald-100 text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 flex items-center gap-1">
+                                    <CheckCircle2 className="w-3 h-3 text-emerald-400" /> In Stock
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-amber-400 font-semibold truncate">{prod.nativeName}</p>
+                              <p className="text-[11px] text-stone-400 mt-0.5 line-clamp-1">{prod.shortDescription}</p>
+                              <p className="text-[10px] text-stone-400 mt-0.5">
+                                Category: <strong className="text-amber-300 uppercase">{prod.category}</strong> • {prod.sizes.length} pack sizes
+                              </p>
+                            </div>
                           </div>
-                        </div>
 
-                        {/* Actions Toolbar */}
-                        <div className="flex items-center justify-between pt-2 border-t border-stone-800 text-xs">
-                          <button
-                            onClick={() => handleOpenEditProduct(prod)}
-                            className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-200 font-bold rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
-                          >
-                            <Edit className="w-3.5 h-3.5 text-amber-400" />
-                            <span>Edit Product</span>
-                          </button>
-
-                          {/* Active Delete Product with Inline Confirmation */}
-                          {confirmDeleteProdId === prod.id ? (
-                            <div className="flex items-center gap-1.5 bg-rose-950/90 p-1 rounded-lg border border-rose-600">
-                              <span className="text-[11px] font-bold text-rose-200 px-1">Confirm delete?</span>
+                          {/* Actions Toolbar */}
+                          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-stone-800 text-xs">
+                            <div className="flex items-center gap-2">
+                              {/* 1-Click Out of Stock Toggle Button */}
                               <button
                                 type="button"
-                                onClick={() => handleDeleteProduct(prod.id)}
-                                className="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white font-bold text-[10px] rounded cursor-pointer shadow"
+                                onClick={() => handleToggleProductOutOfStock(prod)}
+                                className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold cursor-pointer transition-colors flex items-center gap-1 border ${
+                                  isProductOut
+                                    ? "bg-emerald-950 hover:bg-emerald-900 text-emerald-200 border-emerald-700"
+                                    : "bg-rose-950 hover:bg-rose-900 text-rose-200 border-rose-700"
+                                }`}
+                                title={isProductOut ? "Mark this product as In Stock" : "Mark this product as Out of Stock"}
                               >
-                                Yes, Delete
+                                {isProductOut ? (
+                                  <>
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                                    <span>Set In Stock</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <PackageX className="w-3.5 h-3.5 text-rose-400" />
+                                    <span>Set Out of Stock</span>
+                                  </>
+                                )}
                               </button>
+
                               <button
-                                type="button"
-                                onClick={() => setConfirmDeleteProdId(null)}
-                                className="px-2 py-1 bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold text-[10px] rounded cursor-pointer"
+                                onClick={() => handleOpenEditProduct(prod)}
+                                className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-200 font-bold rounded-lg flex items-center gap-1 cursor-pointer transition-colors text-xs"
                               >
-                                Cancel
+                                <Edit className="w-3.5 h-3.5 text-amber-400" />
+                                <span>Edit</span>
                               </button>
                             </div>
-                          ) : (
-                            <button
-                              onClick={() => setConfirmDeleteProdId(prod.id)}
-                              className="px-3 py-1.5 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 font-bold rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
-                              title="Delete this product"
-                            >
-                              <Trash2 className="w-3.5 h-3.5 text-rose-400" />
-                              <span>Delete</span>
-                            </button>
-                          )}
+
+                            {/* Active Delete Product with Inline Confirmation */}
+                            {confirmDeleteProdId === prod.id ? (
+                              <div className="flex items-center gap-1.5 bg-rose-950/90 p-1 rounded-lg border border-rose-600">
+                                <span className="text-[11px] font-bold text-rose-200 px-1">Confirm delete?</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteProduct(prod.id)}
+                                  className="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white font-bold text-[10px] rounded cursor-pointer shadow"
+                                >
+                                  Yes
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setConfirmDeleteProdId(null)}
+                                  className="px-2 py-1 bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold text-[10px] rounded cursor-pointer"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setConfirmDeleteProdId(prod.id)}
+                                className="px-2.5 py-1.5 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 font-bold rounded-lg flex items-center gap-1 cursor-pointer transition-colors text-xs"
+                                title="Delete this product"
+                              >
+                                <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                                <span>Delete</span>
+                              </button>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
+                </div>
+              )}
+
+              {/* TAB: WHOLESALE BULK INQUIRIES */}
+              {activeTab === "wholesale" && (
+                <div className="space-y-6">
+                  <div className="flex flex-wrap items-center justify-between gap-3 bg-stone-950 p-4 rounded-2xl border border-amber-900/30">
+                    <div>
+                      <h3 className="font-serif text-lg font-bold text-amber-200 flex items-center gap-2">
+                        <Building2 className="w-5 h-5 text-amber-400" />
+                        Wholesale & Bulk Orders Manager
+                      </h3>
+                      <p className="text-xs text-stone-400">
+                        Inquiries submitted through the website Wholesale & Bulk form. Contact commercial clients via WhatsApp or Phone.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={reloadWholesaleInquiries}
+                      className="px-3.5 py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>Refresh Inquiries</span>
+                    </button>
+                  </div>
+
+                  {wholesaleInquiries.length === 0 ? (
+                    <div className="p-12 text-center bg-stone-950 rounded-2xl border border-stone-800 space-y-3">
+                      <Building2 className="w-12 h-12 text-stone-600 mx-auto" />
+                      <p className="text-sm font-bold text-stone-300">No Wholesale Inquiries Yet</p>
+                      <p className="text-xs text-stone-500">
+                        Inquiries submitted through the website Wholesale form will appear here with business details and direct WhatsApp reply links.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {wholesaleInquiries.map((inq: any, iIdx: number) => {
+                        const targetWA = (inq.phone || "").replace(/[^0-9]/g, "");
+                        return (
+                          <div
+                            key={inq.id || iIdx}
+                            className="p-4 bg-stone-950 rounded-2xl border border-stone-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                          >
+                            <div className="space-y-1 text-xs">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-[10px] bg-amber-900/60 text-amber-300 px-2 py-0.5 rounded font-bold border border-amber-700">
+                                  {inq.id}
+                                </span>
+                                <span className="font-bold text-white text-sm">{inq.businessName}</span>
+                                <span className="text-stone-400">({inq.contactPerson})</span>
+                              </div>
+                              <p className="text-stone-300">
+                                City: <strong className="text-white">{inq.city}</strong> • Category: <strong className="text-amber-400 capitalize">{inq.category}</strong> • Qty: <strong className="text-emerald-400">{inq.estimatedQuantity}</strong>
+                              </p>
+                              <p className="text-stone-400 text-[11px]">
+                                Phone: <span className="font-mono text-white">{inq.phone}</span> • Frequency: {inq.frequency} • Date: {inq.createdAt}
+                              </p>
+                              {inq.notes && (
+                                <p className="text-stone-400 text-[11px] italic bg-stone-900/80 p-2 rounded-lg border border-stone-800">
+                                  "{inq.notes}"
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              <a
+                                href={`https://wa.me/${targetWA}?text=${encodeURIComponent(`Hello ${inq.contactPerson}, this is Al Raza Mart regarding your wholesale inquiry [${inq.id}] for ${inq.estimatedQuantity}.`)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs flex items-center gap-1.5 transition-colors"
+                              >
+                                <MessageCircle className="w-3.5 h-3.5" />
+                                <span>Chat WhatsApp</span>
+                              </a>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updated = wholesaleInquiries.filter((_, idx) => idx !== iIdx);
+                                  setWholesaleInquiries(updated);
+                                  localStorage.setItem("alraza_wholesale_inquiries", JSON.stringify(updated));
+                                  showNotification("Wholesale inquiry deleted.");
+                                }}
+                                className="p-2 bg-stone-900 hover:bg-rose-950 text-stone-400 hover:text-rose-400 rounded-xl transition-colors cursor-pointer"
+                                title="Delete inquiry"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -2370,7 +2822,7 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                       </div>
 
                       <h4 className="text-[#8ab4f8] text-base hover:underline cursor-pointer font-medium leading-snug">
-                        {configForm.metaTitle || `${configForm.brandName || "Al Raza"} | 100% Pure & Fresh Cold Pressed Oils`}
+                        {configForm.metaTitle || `${configForm.brandName || "Al Raza"} | Pure & Fresh Cold Pressed Oils`}
                       </h4>
 
                       {/* Google Rating Stars & Price Metadata */}
@@ -2381,7 +2833,7 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
 
                       <p className="text-[#bdc1c6] text-xs leading-relaxed pt-1">
                         {configForm.metaDescription ||
-                          "Buy pure, unrefined cold-pressed oils extracted fresh daily under 42°C in food-grade 304 stainless steel machinery. 100% natural mustard, sesame, almond, black seed, coconut & olive oils."}
+                          "Buy pure, unrefined cold-pressed oils extracted fresh daily under 42°C in food-grade 304 stainless steel machinery. Pure natural mustard, sesame, almond, black seed, coconut & olive oils."}
                       </p>
                     </div>
                   </div>
@@ -2411,7 +2863,7 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                       id="owner-seo-meta-title"
                       value={configForm.metaTitle || ""}
                       onChange={(e) => setConfigForm({ ...configForm, metaTitle: e.target.value })}
-                      placeholder="e.g. Al Raza Cold Press Oil Mart | 100% Pure & Fresh Organic Oils"
+                      placeholder="e.g. Al Raza Cold Press Oil Mart | Pure & Fresh Organic Oils"
                       className="w-full p-2.5 bg-stone-900 border border-stone-700 rounded-lg text-white font-medium focus:ring-1 focus:ring-amber-500"
                     />
 
@@ -2423,7 +2875,7 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                         onClick={() =>
                           setConfigForm({
                             ...configForm,
-                            metaTitle: "Al Raza Cold Press Oil Mart | 100% Pure & Fresh Organic Oils",
+                            metaTitle: "Al Raza Cold Press Oil Mart | Pure & Fresh Organic Oils",
                           })
                         }
                         className="px-2 py-1 bg-stone-800 hover:bg-stone-700 text-[11px] text-amber-300 rounded cursor-pointer transition-colors"
@@ -2435,7 +2887,7 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                         onClick={() =>
                           setConfigForm({
                             ...configForm,
-                            metaTitle: "Buy 100% Pure Cold-Pressed Oils Online in Pakistan | Al Raza",
+                            metaTitle: "Buy Pure Cold-Pressed Oils Online in Pakistan | Al Raza",
                           })
                         }
                         className="px-2 py-1 bg-stone-800 hover:bg-stone-700 text-[11px] text-amber-300 rounded cursor-pointer transition-colors"
@@ -2482,7 +2934,7 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                       rows={3}
                       value={configForm.metaDescription || ""}
                       onChange={(e) => setConfigForm({ ...configForm, metaDescription: e.target.value })}
-                      placeholder="e.g. Buy pure, unrefined cold-pressed oils extracted fresh daily under 42°C in food-grade 304 stainless steel machinery. 100% natural mustard, sesame, almond, black seed, coconut & olive oils."
+                      placeholder="e.g. Buy pure, unrefined cold-pressed oils extracted fresh daily under 42°C in food-grade 304 stainless steel machinery. Pure natural mustard, sesame, almond, black seed, coconut & olive oils."
                       className="w-full p-2.5 bg-stone-900 border border-stone-700 rounded-lg text-white leading-relaxed focus:ring-1 focus:ring-amber-500"
                     />
 
@@ -2495,7 +2947,7 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                           setConfigForm({
                             ...configForm,
                             metaDescription:
-                              "Buy pure, unrefined cold-pressed oils extracted fresh daily under 42°C in food-grade 304 stainless steel machinery. 100% natural mustard, sesame, almond, black seed, coconut & olive oils.",
+                              "Buy pure, unrefined cold-pressed oils extracted fresh daily under 42°C in food-grade 304 stainless steel machinery. Pure natural mustard, sesame, almond, black seed, coconut & olive oils.",
                           })
                         }
                         className="px-2 py-1 bg-stone-800 hover:bg-stone-700 text-[11px] text-amber-300 rounded cursor-pointer transition-colors"
@@ -2508,7 +2960,7 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                           setConfigForm({
                             ...configForm,
                             metaDescription:
-                              "100% unadulterated cold pressed oils in Pakistan. Chemical-free, unrefined kachi ghani sarson, raw almond roghan badam, kalonji & extra virgin olive oils delivered to your doorstep.",
+                              "Pure unadulterated cold pressed oils in Pakistan. Chemical-free, unrefined kachi ghani sarson, raw almond roghan badam, kalonji & extra virgin olive oils delivered to your doorstep.",
                           })
                         }
                         className="px-2 py-1 bg-stone-800 hover:bg-stone-700 text-[11px] text-amber-300 rounded cursor-pointer transition-colors"

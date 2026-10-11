@@ -2831,7 +2831,7 @@ export const COLOR_THEMES: ColorTheme[] = [
   },
   {
     id: "golden-mustard-crown",
-    name: "150. Crown Jewel Mustard 100% Pure",
+    name: "150. Crown Jewel Mustard Cold Pressed",
     category: "Vibrant & Bold",
     primary: "#b45309",
     primaryDark: "#451a03",

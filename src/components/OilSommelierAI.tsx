@@ -74,7 +74,7 @@ export const OilSommelierAI: React.FC<OilSommelierAIProps> = ({
     } catch (error) {
       console.error("Oil Advisor Error:", error);
       setAdvice(
-        "Al Raza Cold Press Oil Mart Master recommends:\n\n- **Everyday High-Heat Cooking**: Wood Pressed Groundnut (Peanut) Oil.\n- **Morning Immunity & Respiratory Health**: Cold Pressed Black Seed (Kalonji) Oil (1/2 tsp daily with honey).\n- **Skin & Hair Nourishment**: 100% Pure Sweet Almond (Badam Roghan) & Extra Virgin Coconut Oil.\n- **Traditional Tadka & Bone Strength**: Wood Pressed Gingelly (Sesame) Oil."
+        "Al Raza Cold Press Oil Mart Master recommends:\n\n- **Everyday High-Heat Cooking**: Wood Pressed Groundnut (Peanut) Oil.\n- **Morning Immunity & Respiratory Health**: Cold Pressed Black Seed (Kalonji) Oil (1/2 tsp daily with honey).\n- **Skin & Hair Nourishment**: Pure Sweet Almond (Badam Roghan) & Extra Virgin Coconut Oil.\n- **Traditional Tadka & Bone Strength**: Wood Pressed Gingelly (Sesame) Oil."
       );
     } finally {
       setLoading(false);

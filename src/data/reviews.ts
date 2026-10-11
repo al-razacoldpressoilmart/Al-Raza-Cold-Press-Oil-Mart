@@ -61,7 +61,7 @@ export const INITIAL_REVIEWS: ProductReview[] = [
     verifiedPurchase: true,
     status: "approved",
     helpfulVotes: 42,
-    ownerReply: "Alhamdulillah! Our Kalonji oil is unblended 100% Nigella Sativa with maximum Thymoquinone potency.",
+    ownerReply: "Alhamdulillah! Our Kalonji oil is unblended pure Nigella Sativa with maximum Thymoquinone potency.",
     isFeatured: true,
   },
   {
@@ -100,7 +100,7 @@ export const INITIAL_REVIEWS: ProductReview[] = [
     authorCity: "Kolkata",
     rating: 5,
     title: "Visible Hair & Eyebrow Density",
-    comment: "Thick, rich, and 100% pure castor. I mix it with coconut oil for weekly hair masks. My eyebrows are noticeably thicker.",
+    comment: "Thick, rich, and genuine pure castor. I mix it with coconut oil for weekly hair masks. My eyebrows are noticeably thicker.",
     date: "2026-08-02",
     verifiedPurchase: true,
     status: "approved",

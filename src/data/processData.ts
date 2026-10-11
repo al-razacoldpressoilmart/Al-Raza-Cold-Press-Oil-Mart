@@ -13,14 +13,14 @@ export const PROCESS_STEPS: ProcessStep[] = [
     title: "Triple-Graded Organic Seed Selection",
     subtitle: "Non-GMO, Hand-Picked Single-Origin Seeds",
     description: "We source certified organic, hand-cleaned seeds (Groundnut, Sesame, Mustard, Kalonji, Almond). All seeds are sun-dried naturally and triple-sieved to remove dust and moisture before pressing.",
-    keyMetric: "100% Sun-Dried • Zero Chemical Fumigation",
+    keyMetric: "Naturally Sun-Dried • Zero Chemical Fumigation",
     iconName: "Sprout",
   },
   {
     stepNumber: "02",
     title: "Food-Grade 304 Stainless Steel Cold Press Extraction",
     subtitle: "Automatic Screw Press at Strict Low Temperature",
-    description: "Seeds pass through our advanced commercial cold press screw expeller made of 100% food-grade 304 stainless steel. The slow precision auger operates below 42°C, preserving delicate volatile aromas, enzymes, and natural vitamins.",
+    description: "Seeds pass through our advanced commercial cold press screw expeller made of food-grade 304 stainless steel. The slow precision auger operates below 42°C, preserving delicate volatile aromas, enzymes, and natural vitamins.",
     keyMetric: "Strict Temperature < 42°C • Zero Thermal Breakdown",
     iconName: "Cpu",
   },
@@ -29,7 +29,7 @@ export const PROCESS_STEPS: ProcessStep[] = [
     title: "Natural Cold Mechanical Extraction",
     subtitle: "Zero Chemical Solvents & Zero Friction Overheating",
     description: "Unlike high-speed commercial expellers that burn seeds at 200°C+, our machine uses continuous cold extrusion to naturally squeeze pure virgin oil drop by drop without heating.",
-    keyMetric: "100% Mechanical • Zero Hexane / Solvents",
+    keyMetric: "Pure Mechanical • Zero Hexane / Solvents",
     iconName: "Flame",
   },
   {
@@ -53,7 +53,7 @@ export const PROCESS_STEPS: ProcessStep[] = [
     title: "Hygienic Sealed Bottling & Quality Inspection",
     subtitle: "Sealed, Fresh & Ready for Daily Pure Use",
     description: "Every batch is verified for 0.00% mineral oil and zero chemical additives. The virgin oil is bottled in premium hygienic containers with tamper-evident seals to protect pure freshness.",
-    keyMetric: "100% Food-Grade Safe • Fresh Sealed Guarantee",
+    keyMetric: "Food-Grade Certified • Fresh Sealed Guarantee",
     iconName: "PackageCheck",
   },
 ];
@@ -66,12 +66,12 @@ export const COMPARISON_DATA = [
   },
   {
     feature: "Chemical Solvents",
-    coldPress: "Zero Chemicals, Hexane-free, 100% Pure Mechanical",
+    coldPress: "Zero Chemicals, Hexane-free, Pure Mechanical",
     refinedOil: "Petroleum-derived Hexane solvent used to dissolve seed oil",
   },
   {
     feature: "Bleaching & Deodorizing",
-    coldPress: "Never bleached or deodorized; 100% natural aroma & golden color",
+    coldPress: "Never bleached or deodorized; natural aroma & golden color",
     refinedOil: "Treated with caustic soda, phosphoric acid & bleaching clays",
   },
   {

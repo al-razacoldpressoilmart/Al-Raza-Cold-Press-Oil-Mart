@@ -220,24 +220,21 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       <div className="relative w-full max-w-4xl bg-white text-stone-900 rounded-3xl shadow-2xl overflow-hidden border border-stone-200 max-h-[94vh] flex flex-col">
         
         {/* Header */}
-        <div 
-          className="p-5 sm:p-6 text-white flex items-center justify-between border-b"
-          style={{ backgroundColor: "var(--theme-header-bg, #0f172a)" }}
-        >
+        <div className="p-5 sm:p-6 bg-emerald-700 text-white flex items-center justify-between border-b border-emerald-800">
           <div className="flex items-center gap-3">
-            <ShoppingBag className="w-5 h-5 text-emerald-400" />
+            <ShoppingBag className="w-5 h-5 text-emerald-200" />
             <div>
-              <h2 className="font-serif text-lg sm:text-xl font-bold">
-                {isSuccess ? "Order Confirmed / آرڈر مکمل ہو گیا" : "WordPress Easy Checkout / آسان آرڈر چیک آؤٹ"}
+              <h2 className="text-lg sm:text-xl font-bold">
+                {isSuccess ? "Order Confirmed / آرڈر مکمل ہو گیا" : "Easy Cash on Delivery Checkout / آسان چیک آؤٹ"}
               </h2>
-              <p className="text-xs text-stone-300">
-                {isSuccess ? "Your order has been registered" : "Cash on Delivery · Pay when you receive"}
+              <p className="text-xs text-emerald-100">
+                {isSuccess ? "Your order has been registered" : "Cash on Delivery · Pay when parcel arrives"}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-stone-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
+            className="p-1.5 text-emerald-100 hover:text-white hover:bg-emerald-800 rounded-xl transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -605,7 +602,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
                   <div className="flex items-center justify-center gap-2 text-[10px] text-stone-500">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>100% Pure Guaranteed · Pay Upon Delivery</span>
+                    <span>Quality Guaranteed · Pay Upon Delivery</span>
                   </div>
                 </div>
 
