@@ -1,13 +1,16 @@
-// Local generated high-resolution assets for Al Raza Cold Press Oil Mart
-import heroOilsDisplay from './images/hero_oils_display_1786258676442.jpg';
-import machineAsset from './images/cold_press_oil_machine_1786259679160.jpg';
-import seedSelection from './images/seed_selection_1786258714379.jpg';
-import oilPouringGold from './images/oil_pouring_gold_1786258731630.jpg';
-import olivePlasticBottle from './images/olive_plastic_bottle_1786261283172.jpg';
+// Local generated high-resolution assets for Al Raza Cold Press Oil Mart (Optimized WebP)
+import heroOilsDisplay from './images/hero_oils_display.webp';
+import machineAsset from './images/cold_press_oil_machine.webp';
+import seedSelection from './images/seed_selection.webp';
+import oilPouringGold from './images/oil_pouring_gold.webp';
+import olivePlasticBottle from './images/olive_plastic_bottle.webp';
+import woodPressGhani from './images/wood_press_ghani.webp';
 
 export const ASSETS = {
-  heroOilsDisplay,
-  woodPressGhani: machineAsset,
+  logo: "/logo.webp",
+  heroBanner: "/hero-banner.webp",
+  heroOilsDisplay: "/hero-banner.webp",
+  woodPressGhani,
   stainlessPressMachine: machineAsset,
   pressMachine: machineAsset,
   precisionColdMachine: machineAsset,

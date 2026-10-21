@@ -10,7 +10,8 @@ import {
   Droplet,
   Flame,
   Wheat,
-  ShieldCheck
+  ShieldCheck,
+  Sparkles
 } from "lucide-react";
 import { Product } from "../types";
 import { ASSETS } from "../assets/images";
@@ -18,6 +19,7 @@ import { Language, TRANSLATIONS } from "../utils/translations";
 
 interface ProductCardProps {
   product: Product;
+  cardIndex?: number;
   onAddToCart: (product: Product, sizeIndex: number, quantity: number) => void;
   onQuickView: (product: Product) => void;
   onBuyNow?: (product: Product, sizeIndex: number) => void;
@@ -26,6 +28,7 @@ interface ProductCardProps {
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
+  cardIndex = 0,
   onAddToCart,
   onQuickView,
   onBuyNow,
@@ -33,6 +36,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const [selectedSizeIndex, setSelectedSizeIndex] = useState(0);
   const [isAdded, setIsAdded] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const t = TRANSLATIONS[language];
   const isUrdu = language === "ur";
@@ -58,8 +62,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     if (product.category === "oils") return <Droplet className="w-3 h-3 text-emerald-600 fill-emerald-600" />;
     if (product.category === "spices") return <Flame className="w-3 h-3 text-amber-600" />;
     if (product.category === "flour") return <Wheat className="w-3 h-3 text-amber-700" />;
+    if (product.category === "beauty") return <Sparkles className="w-3 h-3 text-rose-500" />;
     return <ShieldCheck className="w-3 h-3 text-emerald-600" />;
   };
+
+  const isEager = cardIndex < 4;
+  let resolvedImage = product.heroImage?.trim() || "";
+  if (!resolvedImage || resolvedImage.includes("olive_plastic_bottle") || resolvedImage.includes("1786261283172")) {
+    resolvedImage = ASSETS.olivePlasticBottle || "/olive_plastic_bottle.webp";
+  }
+
+  const imageSource = imageError ? (ASSETS.olivePlasticBottle || "/olive_plastic_bottle.webp") : resolvedImage;
 
   return (
     <div 
@@ -68,12 +81,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     >
       {/* Product Image Section */}
       <div 
-        className="relative h-52 sm:h-56 bg-slate-50 overflow-hidden cursor-pointer"
+        className="relative h-52 sm:h-56 bg-slate-50 overflow-hidden cursor-pointer aspect-[4/3]"
         onClick={() => onQuickView(product)}
       >
         <img
-          src={product.heroImage && product.heroImage.trim() !== "" ? product.heroImage : ASSETS.olivePlasticBottle}
+          src={imageSource}
           alt={product.name}
+          width={400}
+          height={300}
+          loading={isEager ? "eager" : "lazy"}
+          decoding="async"
+          {...(isEager ? { fetchPriority: "high" as const } : {})}
+          onError={() => setImageError(true)}
           className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
           referrerPolicy="no-referrer"
         />

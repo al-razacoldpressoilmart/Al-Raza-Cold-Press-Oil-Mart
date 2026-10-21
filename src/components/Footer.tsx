@@ -22,7 +22,7 @@ interface FooterProps {
   onOpenOrderTracking?: () => void;
   storeConfig: StoreConfig;
   onOpenOwnerPanel?: () => void;
-  onSelectCategory?: (category: "all" | "oils" | "spices" | "flour") => void;
+  onSelectCategory?: (category: "all" | "oils" | "spices" | "flour" | "beauty") => void;
   scrollToSection?: (sectionId: string) => void;
 }
 
@@ -181,6 +181,15 @@ export const Footer: React.FC<FooterProps> = ({
                 >
                   <Wheat className="w-3.5 h-3.5 text-amber-700" />
                   <span>Chakki Atta &amp; Flour</span>
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => onSelectCategory?.("beauty")}
+                  className="hover:text-rose-700 transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-rose-500" />
+                  <span>Hair Oil &amp; Beauty</span>
                 </button>
               </li>
               <li>

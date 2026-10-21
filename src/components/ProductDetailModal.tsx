@@ -217,10 +217,21 @@ Salam Al Raza Mart! I would like to order this item directly via WhatsApp. Pleas
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                 {/* Left: Product Image & Badges */}
                 <div className="md:col-span-5 space-y-4">
-                  <div className="relative rounded-xl overflow-hidden border border-amber-900/20 bg-amber-100 shadow-inner">
+                  <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shadow-inner">
                     <img
-                      src={product.heroImage && product.heroImage.trim() !== "" ? product.heroImage : ASSETS.olivePlasticBottle}
+                      src={
+                        product.heroImage && product.heroImage.trim() !== "" && !product.heroImage.includes("1786261283172")
+                          ? product.heroImage 
+                          : (ASSETS.olivePlasticBottle || "/olive_plastic_bottle.webp")
+                      }
                       alt={product.name}
+                      width={400}
+                      height={300}
+                      loading="eager"
+                      decoding="async"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = ASSETS.olivePlasticBottle || "/olive_plastic_bottle.webp";
+                      }}
                       className="w-full h-64 sm:h-72 object-cover object-center"
                       referrerPolicy="no-referrer"
                     />

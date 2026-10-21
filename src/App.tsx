@@ -58,7 +58,18 @@ export default function App() {
   const [storeConfig, setStoreConfig] = useState<StoreConfig>(() => {
     try {
       const saved = localStorage.getItem("alraza_store_config");
-      return saved ? { ...DEFAULT_STORE_CONFIG, ...JSON.parse(saved) } : DEFAULT_STORE_CONFIG;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const merged = { ...DEFAULT_STORE_CONFIG, ...parsed };
+        if (!merged.heroImage || merged.heroImage.trim() === "" || merged.heroImage.includes("1786258676442")) {
+          merged.heroImage = DEFAULT_STORE_CONFIG.heroImage;
+        }
+        if (!merged.logoUrl || merged.logoUrl.trim() === "") {
+          merged.logoUrl = DEFAULT_STORE_CONFIG.logoUrl;
+        }
+        return merged;
+      }
+      return DEFAULT_STORE_CONFIG;
     } catch {
       return DEFAULT_STORE_CONFIG;
     }
@@ -119,8 +130,8 @@ export default function App() {
     });
   };
 
-  // Selected Category filter (all, oils, spices, flour)
-  const [selectedCategory, setSelectedCategory] = useState<"all" | "oils" | "spices" | "flour">("all");
+  // Selected Category filter (all, oils, spices, flour, beauty)
+  const [selectedCategory, setSelectedCategory] = useState<"all" | "oils" | "spices" | "flour" | "beauty">("all");
 
   // Navigation & Search state
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -235,12 +246,12 @@ export default function App() {
       if (remoteConfig) {
         setStoreConfig((prev) => {
           const merged = { ...prev, ...remoteConfig };
-          // Preserve valid local heroImage/logoUrl if remote returns empty string
-          if ((!remoteConfig.heroImage || remoteConfig.heroImage.trim() === "") && prev.heroImage && prev.heroImage.trim() !== "") {
-            merged.heroImage = prev.heroImage;
+          // Preserve valid local heroImage/logoUrl if remote returns empty string or legacy heavy file
+          if (!remoteConfig.heroImage || remoteConfig.heroImage.trim() === "" || remoteConfig.heroImage.includes("1786258676442")) {
+            merged.heroImage = prev.heroImage || DEFAULT_STORE_CONFIG.heroImage;
           }
-          if ((!remoteConfig.logoUrl || remoteConfig.logoUrl.trim() === "") && prev.logoUrl && prev.logoUrl.trim() !== "") {
-            merged.logoUrl = prev.logoUrl;
+          if (!remoteConfig.logoUrl || remoteConfig.logoUrl.trim() === "") {
+            merged.logoUrl = prev.logoUrl || DEFAULT_STORE_CONFIG.logoUrl;
           }
           return merged;
         });
@@ -250,14 +261,29 @@ export default function App() {
     const unsubProducts = subscribeProducts((remoteProducts) => {
       if (remoteProducts) {
         if (remoteProducts.length > 0) {
-          // Hard-refresh from Firestore, completely ignoring stale localStorage or local deleted filters
-          setProducts(remoteProducts);
+          // Merge remote products, preserving default catalog items not yet in remote, and clean legacy image paths
+          setProducts(() => {
+            const cleanRemote = remoteProducts.map(p => {
+              let img = p.heroImage?.trim() || "";
+              if (!img || img.includes("olive_plastic_bottle") || img.includes("1786261283172")) {
+                img = "/olive_plastic_bottle.webp";
+              }
+              return { ...p, heroImage: img };
+            });
+            const remoteMap = new Map(cleanRemote.map(p => [p.id, p]));
+            const combined = [...cleanRemote];
+            PRODUCTS.forEach(dp => {
+              if (!remoteMap.has(dp.id)) {
+                combined.push(dp);
+              }
+            });
+            return combined;
+          });
         } else {
-          // If Firestore is completely empty, re-initialize with the default 6 products
+          // If Firestore is completely empty, initialize with default products
           setProducts(PRODUCTS);
           PRODUCTS.forEach(p => saveProductToFirestore(p).catch(() => {}));
         }
-        // Clear any stale local deleted IDs cache so it doesn't artificially hide items in future
         localStorage.removeItem("alraza_deleted_product_ids");
       }
     });

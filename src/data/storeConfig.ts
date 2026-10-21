@@ -73,11 +73,12 @@ export const DEFAULT_STORE_CONFIG: StoreConfig = {
   brandName: "Al Raza Pure Mart",
   brandTagline: "Cold-Pressed Oils, Fresh Ground Spices & Stone-Ground Chakki Atta",
   brandBadge: "Cold Pressed & Natural",
+  logoUrl: "/logo.webp",
   heroTitle: "Pure Cold-Pressed Oils,",
   heroHighlight: "Authentic Spices & Chakki Atta",
   heroSubtitle: "Traditional stone-ground whole wheat chakki atta, slow cold-pressed virgin oils, and unadulterated ground spices delivered right to your doorstep with Cash on Delivery across Pakistan.",
   heroBadge: "Unrefined, Natural & Chemical-Free",
-  heroImage: ASSETS.heroOilsDisplay,
+  heroImage: "/hero-banner.webp",
 
   contactPhone1: "03292832225",
   contactPhone2: "",

@@ -490,6 +490,13 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
     { label: "Sweet Almond", url: ASSETS.almondOil },
   ];
 
+  const BEAUTY_PRESET_IMAGES = [
+    { label: "7-Herb Hair Growth", url: "https://images.unsplash.com/photo-1608248597359-46743b10b037?auto=format&fit=crop&w=800&q=80" },
+    { label: "Castor Hair & Eyebrow", url: "https://images.unsplash.com/photo-1547793548-710ec861bb6e?auto=format&fit=crop&w=800&q=80" },
+    { label: "Badam Roghan Shirin", url: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=800&q=80" },
+    { label: "Rosemary Scalp Tonic", url: "https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?auto=format&fit=crop&w=800&q=80" },
+  ];
+
   // Open Create New Oil Product
   const handleOpenCreateOil = () => {
     const newProd: Product = {
@@ -529,6 +536,53 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
         omega3: "6g",
         omega6: "15g",
         antioxidants: "Allyl Isothiocyanate & Tocopherols",
+      },
+      rating: 5.0,
+      reviewsCount: 1,
+      isOutOfStock: false,
+    };
+    setEditingProduct(newProd);
+    setIsNewProduct(true);
+  };
+
+  // Open Create New Hair Oil & Beauty Care Product
+  const handleOpenCreateBeauty = () => {
+    const newProd: Product = {
+      id: `ar-bty-${Date.now()}`,
+      name: "7-Herb Botanical Hair Growth Miracle Oil",
+      nativeName: "سات جڑی بوٹیوں والا بالوں کا روغنی تیل",
+      category: "beauty",
+      tag: "Amla, Bhringraj & Shikakai Infusion • Zero Mineral Oil",
+      shortDescription: "Cold-pressed virgin oils infused with 7 wild herbs to halt hair fall and awaken dormant roots.",
+      description: "Traditional herbal scalp formula with sun-dried Amla, Bhringraj, Shikakai, Methi, and Rosemary in virgin cold-pressed oil base.",
+      heroImage: "https://images.unsplash.com/photo-1608248597359-46743b10b037?auto=format&fit=crop&w=800&q=80",
+      seedOrigin: "Cold Pressed Virgin Base with Certified Botanicals",
+      woodType: "Cold Pressed Base + Low-Heat Herbal Maceration",
+      extractionTemp: "Slow Infusion (< 40°C)",
+      smokePoint: "Topical Scalp Treatment",
+      aromaTaste: "Deep herbal, calming botanical scent",
+      colorProfile: "Rich Forest Green with Amber Undertones",
+      batchNo: `AR-BTY-${new Date().getFullYear()}`,
+      sizes: [
+        { size: "100ml Dropper Bottle", price: 450, originalPrice: 550, inStock: true, stockQuantity: 40, lowStockThreshold: 10 },
+        { size: "200ml Glass Bottle", price: 820, originalPrice: 980, inStock: true, stockQuantity: 35, lowStockThreshold: 8 },
+        { size: "500ml Family Value Pack", price: 1850, originalPrice: 2200, inStock: true, stockQuantity: 20, lowStockThreshold: 5 },
+      ],
+      benefits: [
+        "Stops aggressive seasonal & postpartum hair fall",
+        "Awakens dormant hair follicles and thickens edges",
+        "Deeply conditions without petroleum mineral oils",
+      ],
+      bestFor: ["Hair Growth Massage", "Dandruff Treatment", "Eyebrow & Beard Growth"],
+      nutrition: {
+        caloriesPer100g: 884,
+        monounsaturatedFat: "42g",
+        polyunsaturatedFat: "40g",
+        saturatedFat: "14g",
+        vitaminE: "32mg",
+        omega3: "4.5g",
+        omega6: "22g",
+        antioxidants: "Botanical Tannins & Rosemary Cineole",
       },
       rating: 5.0,
       reviewsCount: 1,
@@ -1445,6 +1499,15 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                         <Wheat className="w-3.5 h-3.5" />
                         <span>+ Add Flour (Atta)</span>
                       </button>
+
+                      <button
+                        type="button"
+                        onClick={handleOpenCreateBeauty}
+                        className="px-3.5 py-2 bg-rose-800 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer transition-all border border-rose-600"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>+ Add Hair Oil / Beauty</span>
+                      </button>
                     </div>
                   </div>
 
@@ -1510,6 +1573,7 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                             <option value="oils">Cold Pressed Oils (تیل جات)</option>
                             <option value="spices">Spices & Masalajat (مصالحہ جات)</option>
                             <option value="flour">Chakki Atta & Flour (چکی آٹا اور اناج)</option>
+                            <option value="beauty">Hair Oils & Beauty Care (ہیئر آئل اور بیوٹی)</option>
                           </select>
                         </div>
                         <div>
@@ -1581,6 +1645,8 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                               ? SPICE_PRESET_IMAGES
                               : editingProduct.category === "flour"
                               ? FLOUR_PRESET_IMAGES
+                              : editingProduct.category === "beauty"
+                              ? BEAUTY_PRESET_IMAGES
                               : OIL_PRESET_IMAGES
                             ).map((preset, pIdx) => (
                               <button

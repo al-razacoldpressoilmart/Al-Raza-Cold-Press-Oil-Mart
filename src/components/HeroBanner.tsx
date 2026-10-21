@@ -14,10 +14,12 @@ import {
 } from "lucide-react";
 import { StoreConfig } from "../data/storeConfig";
 
+import { ASSETS } from "../assets/images";
+
 interface HeroBannerProps {
   onExploreProducts: () => void;
   onWholesale?: () => void;
-  onSelectCategory?: (category: "all" | "oils" | "spices" | "flour") => void;
+  onSelectCategory?: (category: "all" | "oils" | "spices" | "flour" | "beauty") => void;
   storeConfig: StoreConfig;
 }
 
@@ -27,6 +29,18 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
   onSelectCategory,
   storeConfig,
 }) => {
+  const initialHero = (storeConfig.heroImage && storeConfig.heroImage.trim() !== "")
+    ? storeConfig.heroImage
+    : "/hero-banner.webp";
+  const [heroSrc, setHeroSrc] = React.useState(initialHero);
+  const [isHeroLoaded, setIsHeroLoaded] = React.useState(false);
+
+  React.useEffect(() => {
+    if (storeConfig.heroImage && storeConfig.heroImage.trim() !== "" && storeConfig.heroImage !== heroSrc) {
+      setHeroSrc(storeConfig.heroImage);
+    }
+  }, [storeConfig.heroImage]);
+
   return (
     <section 
       id="hero" 
@@ -48,16 +62,16 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
 
             {/* Main Headline */}
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
-              Cold-Pressed <span className="text-emerald-700">Virgin Oils</span>, Fresh <span className="text-amber-600">Spices</span> & <span className="text-amber-800">Chakki Atta</span>
+              Cold-Pressed <span className="text-emerald-700">Virgin Oils</span>, Fresh <span className="text-amber-600">Spices</span>, <span className="text-amber-800">Chakki Atta</span> & <span className="text-rose-600">Hair Care</span>
             </h1>
 
             {/* Subtitle */}
             <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-              Authentic slow cold-pressed virgin oils below 38°C, unadulterated whole ground spices, and traditional stone-ground whole wheat chakki atta delivered fresh with Cash on Delivery across Pakistan.
+              Authentic slow cold-pressed virgin oils below 38°C, unadulterated whole ground spices, stone-ground chakki flour, and herbal hair growth oils delivered fresh with Cash on Delivery across Pakistan.
             </p>
 
-            {/* 3 Categories Visual Cards Shortcuts */}
-            <div className="grid grid-cols-3 gap-2.5 sm:gap-3 pt-1 text-left">
+            {/* 4 Categories Visual Cards Shortcuts */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 pt-1 text-left">
               <button
                 onClick={() => onSelectCategory?.("oils")}
                 className="p-3 rounded-2xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 transition-all cursor-pointer group shadow-2xs"
@@ -69,7 +83,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                   Cold Pressed Oils
                 </h4>
                 <p className="text-[10px] text-slate-500 mt-0.5 line-clamp-1">
-                  Mustard, Olive, Coconut, Kalonji
+                  Mustard, Olive, Coconut
                 </p>
               </button>
 
@@ -84,7 +98,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                   Spices (Masalajat)
                 </h4>
                 <p className="text-[10px] text-slate-500 mt-0.5 line-clamp-1">
-                  Turmeric, Red Chili, Coriander
+                  Turmeric, Chili, Dhaniya
                 </p>
               </button>
 
@@ -100,6 +114,21 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                 </h4>
                 <p className="text-[10px] text-slate-500 mt-0.5 line-clamp-1">
                   Whole Wheat, Besan, Corn
+                </p>
+              </button>
+
+              <button
+                onClick={() => onSelectCategory?.("beauty")}
+                className="p-3 rounded-2xl bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-300 transition-all cursor-pointer group shadow-2xs"
+              >
+                <div className="w-8 h-8 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <h4 className="text-xs font-bold text-slate-900 group-hover:text-rose-800">
+                  Hair Oil & Beauty
+                </h4>
+                <p className="text-[10px] text-slate-500 mt-0.5 line-clamp-1">
+                  Amla, Castor, Badam Roghan
                 </p>
               </button>
             </div>
@@ -151,13 +180,24 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
 
           {/* Right Column: Clean Visual Showcase */}
           <div className="lg:col-span-5">
-            <div className="relative rounded-2xl overflow-hidden border border-slate-200 shadow-md bg-slate-50">
+            <div className="relative rounded-2xl overflow-hidden border border-slate-200 shadow-md bg-stone-900 aspect-[4/3] sm:aspect-auto sm:h-96">
               <img
-                src={storeConfig.heroImage && storeConfig.heroImage.trim() !== "" ? storeConfig.heroImage : "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=800&q=80"}
+                src={heroSrc}
                 alt={storeConfig.brandName}
-                className="w-full h-80 sm:h-96 object-cover object-center"
+                width={640}
+                height={384}
+                loading="eager"
+                decoding="async"
+                {...({ fetchPriority: "high" as const })}
+                onLoad={() => setIsHeroLoaded(true)}
+                onError={() => {
+                  if (heroSrc !== "/hero-banner.webp") {
+                    setHeroSrc("/hero-banner.webp");
+                  }
+                }}
+                className={`w-full h-80 sm:h-96 object-cover object-center transition-opacity duration-300 ${isHeroLoaded ? "opacity-100" : "opacity-95"}`}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/75 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent pointer-events-none" />
 
               {/* Floating Bottom Card */}
               <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md border border-slate-200 p-3.5 rounded-xl shadow-lg">

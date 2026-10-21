@@ -24,7 +24,7 @@ interface NavbarProps {
   activeSection: string;
   scrollToSection: (sectionId: string) => void;
   storeConfig: StoreConfig;
-  onSelectCategory?: (category: "all" | "oils" | "spices" | "flour") => void;
+  onSelectCategory?: (category: "all" | "oils" | "spices" | "flour" | "beauty") => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -40,8 +40,9 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [logoError, setLogoError] = useState(false);
 
-  const handleCategoryClick = (cat: "all" | "oils" | "spices" | "flour") => {
+  const handleCategoryClick = (cat: "all" | "oils" | "spices" | "flour" | "beauty") => {
     setIsMobileMenuOpen(false);
     onSelectCategory?.(cat);
     scrollToSection("products");
@@ -100,14 +101,20 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="flex items-center gap-3 cursor-pointer group"
             onClick={() => handleNavClick("hero")}
           >
-            {storeConfig.logoUrl && storeConfig.logoUrl.trim() !== "" ? (
+            {!logoError ? (
               <img
-                src={storeConfig.logoUrl}
+                src={(storeConfig.logoUrl && storeConfig.logoUrl.trim() !== "") ? storeConfig.logoUrl : "/logo.webp"}
                 alt={storeConfig.brandName}
-                className="w-11 h-11 rounded-xl object-cover border border-slate-200 shadow-xs"
+                width={44}
+                height={44}
+                loading="eager"
+                decoding="async"
+                {...({ fetchPriority: "high" as const })}
+                onError={() => setLogoError(true)}
+                className="w-11 h-11 rounded-xl object-cover border border-slate-200 shadow-xs bg-white shrink-0"
               />
             ) : (
-              <div className="w-11 h-11 rounded-xl bg-emerald-700 flex items-center justify-center text-white shadow-xs group-hover:bg-emerald-800 transition-colors">
+              <div className="w-11 h-11 rounded-xl bg-emerald-700 flex items-center justify-center text-white shadow-xs group-hover:bg-emerald-800 transition-colors shrink-0">
                 <Droplet className="w-6 h-6 fill-white" />
               </div>
             )}
@@ -156,6 +163,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <Wheat className="w-4 h-4 text-amber-700" />
               <span>Chakki Atta & Flour</span>
+            </button>
+
+            {/* Hair Oil & Beauty Section */}
+            <button
+              id="nav-section-beauty"
+              onClick={() => handleCategoryClick("beauty")}
+              className="px-3.5 py-2 rounded-xl text-slate-700 hover:text-rose-700 hover:bg-rose-50 transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4 text-rose-500" />
+              <span>Hair Oil & Beauty</span>
             </button>
 
             {/* Wholesale & Bulk Quantity Form Link */}
@@ -277,6 +294,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <Wheat className="w-4 h-4 text-amber-700" />
             <span>Chakki Atta & Flour</span>
+          </button>
+
+          <button
+            onClick={() => handleCategoryClick("beauty")}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold text-slate-800 hover:bg-rose-50 hover:text-rose-700 transition-colors"
+          >
+            <Sparkles className="w-4 h-4 text-rose-500" />
+            <span>Hair Oil & Beauty Care</span>
           </button>
 
           <div className="pt-2 border-t border-slate-100 space-y-2">

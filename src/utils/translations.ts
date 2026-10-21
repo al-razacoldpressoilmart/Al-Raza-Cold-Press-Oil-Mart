@@ -35,10 +35,12 @@ export interface Translations {
   catOils: string;
   catSpices: string;
   catFlour: string;
+  catBeauty: string;
   catAllDesc: string;
   catOilsDesc: string;
   catSpicesDesc: string;
   catFlourDesc: string;
+  catBeautyDesc: string;
   
   // Product Card
   perBottle: string;
@@ -93,10 +95,12 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     catOils: "Cold Pressed Oils",
     catSpices: "Spices (Masalajat)",
     catFlour: "Flour & Chakki Atta",
+    catBeauty: "Hair Oils & Beauty",
     catAllDesc: "All natural cold pressed kitchen essentials",
     catOilsDesc: "Virgin cold-pressed mustard, olive, coconut, sesame & seed oils",
     catSpicesDesc: "Stone ground unadulterated turmeric, chili, coriander & spice blends",
     catFlourDesc: "Traditional stone-ground whole wheat atta, gram flour & natural grains",
+    catBeautyDesc: "Amla, Bhringraj, Castor, Badam Roghan & Natural Scalp Tonics",
     
     perBottle: "Pack",
     rs: "Rs.",
@@ -147,10 +151,12 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     catOils: "تیل جات (Oils)",
     catSpices: "مصالحہ جات (Spices)",
     catFlour: "چکی کا آٹا (Flour & Atta)",
+    catBeauty: "ہیئر آئل اور بیوٹی (Hair Oil & Beauty)",
     catAllDesc: "ہماری تمام قدرتی اشیاء",
     catOilsDesc: "کچی گھانی سے تازہ نکلا سرسوں، زیتون، ناریل اور دیگر تیل",
     catSpicesDesc: "بغیر کیمیکل و رنگ کے تازہ پسے ہوئے دیسی مصالحہ جات",
     catFlourDesc: "روایتی پتھر چکی کا بغیر چھنا گندم آٹا، بیسن، مکئی اور جو کا آٹا",
+    catBeautyDesc: "آملہ، ارنڈی، بادام روغن شیریں اور ہربل ہیئر کیئر",
     
     perBottle: "پیک",
     rs: "روپے",

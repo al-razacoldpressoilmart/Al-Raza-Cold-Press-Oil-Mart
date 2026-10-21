@@ -21,8 +21,9 @@ interface ProductCatalogProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   language?: Language;
-  selectedCategory?: "all" | "oils" | "spices" | "flour";
-  setSelectedCategory?: (cat: "all" | "oils" | "spices" | "flour") => void;
+  selectedCategory?: "all" | "oils" | "spices" | "flour" | "beauty";
+  setSelectedCategory?: (cat: "all" | "oils" | "spices" | "flour" | "beauty") => void;
+  isLoading?: boolean;
 }
 
 export const ProductCatalog: React.FC<ProductCatalogProps> = ({
@@ -35,8 +36,9 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
   language = "ur",
   selectedCategory: controlledCategory,
   setSelectedCategory: setControlledCategory,
+  isLoading = false,
 }) => {
-  const [localCategory, setLocalCategory] = useState<"all" | "oils" | "spices" | "flour">("all");
+  const [localCategory, setLocalCategory] = useState<"all" | "oils" | "spices" | "flour" | "beauty">("all");
   const [sortBy, setSortBy] = useState<"popularity" | "price-low" | "price-high" | "rating">("popularity");
 
   const selectedCategory = controlledCategory !== undefined ? controlledCategory : localCategory;
@@ -58,7 +60,7 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
       label: t.catOils, 
       desc: t.catOilsDesc,
       icon: <Droplet className="w-4 h-4 text-emerald-600 fill-emerald-600/30" />,
-      count: products.filter(p => p.category === "oils" || p.category === "cooking" || p.category === "wellness" || p.category === "beauty").length 
+      count: products.filter(p => p.category === "oils" || p.category === "cooking" || p.category === "wellness").length 
     },
     { 
       id: "spices" as const, 
@@ -74,6 +76,13 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
       icon: <Wheat className="w-4 h-4 text-amber-700" />,
       count: products.filter(p => p.category === "flour").length 
     },
+    { 
+      id: "beauty" as const, 
+      label: t.catBeauty || "Hair Oils & Beauty", 
+      desc: t.catBeautyDesc || "Hair Growth, Castor, Badam Roghan & Scalp Tonics",
+      icon: <Sparkles className="w-4 h-4 text-rose-500" />,
+      count: products.filter(p => p.category === "beauty").length 
+    },
   ];
 
   const filteredProducts = useMemo(() => {
@@ -81,8 +90,10 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
       // Category match
       if (selectedCategory !== "all") {
         if (selectedCategory === "oils") {
-          const isOil = product.category === "oils" || product.category === "cooking" || product.category === "wellness" || product.category === "beauty";
+          const isOil = product.category === "oils" || product.category === "cooking" || product.category === "wellness";
           if (!isOil) return false;
+        } else if (selectedCategory === "beauty") {
+          if (product.category !== "beauty") return false;
         } else if (product.category !== selectedCategory) {
           return false;
         }
@@ -210,12 +221,30 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
         </div>
 
         {/* Products Grid */}
-        {filteredProducts.length > 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-pulse">
+            {[1, 2, 3, 4].map((n) => (
+              <div key={n} className="rounded-2xl bg-white border border-slate-200 overflow-hidden shadow-2xs">
+                <div className="h-52 sm:h-56 bg-slate-100" />
+                <div className="p-4 space-y-3">
+                  <div className="h-3 bg-slate-100 rounded w-1/3" />
+                  <div className="h-4 bg-slate-200 rounded w-3/4" />
+                  <div className="h-3 bg-slate-100 rounded w-full" />
+                  <div className="pt-2 flex justify-between items-center">
+                    <div className="h-5 bg-slate-200 rounded w-1/4" />
+                    <div className="h-8 bg-slate-100 rounded-xl w-1/3" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => (
+            {filteredProducts.map((product, idx) => (
               <ProductCard
                 key={product.id}
                 product={product}
+                cardIndex={idx}
                 onAddToCart={onAddToCart}
                 onQuickView={onQuickView}
                 onBuyNow={onBuyNow}
