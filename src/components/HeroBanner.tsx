@@ -62,12 +62,12 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
 
             {/* Main Headline */}
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
-              Cold-Pressed <span className="text-emerald-700">Virgin Oils</span>, Fresh <span className="text-amber-600">Spices</span>, <span className="text-amber-800">Chakki Atta</span> & <span className="text-rose-600">Hair Care</span>
+              Cold-Pressed <span className="text-emerald-700">Virgin Oils</span>, Fresh <span className="text-amber-600">Spices</span>, <span className="text-amber-800">Stone-Ground Flour</span> & <span className="text-rose-600">Hair Care</span>
             </h1>
 
             {/* Subtitle */}
             <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-              Authentic slow cold-pressed virgin oils below 38°C, unadulterated whole ground spices, stone-ground chakki flour, and herbal hair growth oils delivered fresh with Cash on Delivery across Pakistan.
+              Authentic slow cold-pressed virgin oils below 38°C, unadulterated whole ground spices, stone-ground whole wheat flour, and herbal hair growth oils delivered fresh with Cash on Delivery across Pakistan.
             </p>
 
             {/* 4 Categories Visual Cards Shortcuts */}
@@ -110,7 +110,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                   <Wheat className="w-4 h-4" />
                 </div>
                 <h4 className="text-xs font-bold text-slate-900 group-hover:text-amber-900">
-                  Chakki Atta & Flour
+                  Stone-Ground Flour
                 </h4>
                 <p className="text-[10px] text-slate-500 mt-0.5 line-clamp-1">
                   Whole Wheat, Besan, Corn

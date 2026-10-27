@@ -189,7 +189,7 @@ export const AffiliateProgramSection: React.FC<AffiliateProgramSectionProps> = (
                 </button>
 
                 <a
-                  href={`https://wa.me/?text=${encodeURIComponent(`Check out Al Raza Pure Cold Pressed Oils, Spices & Chakki Atta! Get authentic unadulterated essentials with Cash on Delivery: ${demoReferralLink}`)}`}
+                  href={`https://wa.me/?text=${encodeURIComponent(`Check out Al Raza Pure Cold Pressed Oils, Spices & Stone-Ground Flour! Get authentic unadulterated essentials with Cash on Delivery: ${demoReferralLink}`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"

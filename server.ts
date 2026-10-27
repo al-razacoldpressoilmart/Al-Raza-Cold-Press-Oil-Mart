@@ -400,6 +400,12 @@ app.post("/api/inquiry", (req, res) => {
 
 // Server start & Vite integration
 async function startServer() {
+  // Serve public directory for static assets (hero banners, logos, webp assets)
+  app.use(express.static(path.join(process.cwd(), "public"), {
+    maxAge: "7d",
+    etag: true,
+  }));
+
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },

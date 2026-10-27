@@ -11,7 +11,9 @@ import {
   orderBy,
   limit,
   handleFirestoreError,
-  OperationType
+  OperationType,
+  arrayUnion,
+  arrayRemove
 } from "../lib/firebase";
 import { StoreConfig } from "../data/storeConfig";
 import { Product, ProductReview } from "../types";
@@ -188,6 +190,15 @@ export async function saveProductToFirestore(product: Product): Promise<void> {
   try {
     const cleanProduct = sanitizeFirestorePayload(product);
     await setDoc(doc(db, "products", product.id), cleanProduct);
+    // Unmark from deletedProductIds in store_config if it was previously deleted
+    await setDoc(
+      doc(db, "store_config", "main_settings"),
+      {
+        deletedProductIds: arrayRemove(product.id),
+        updatedAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
   } catch (error) {
     console.warn("Firestore save product error:", error);
   }
@@ -196,7 +207,17 @@ export async function saveProductToFirestore(product: Product): Promise<void> {
 export async function deleteProductFromFirestore(productId: string): Promise<void> {
   const path = `products/${productId}`;
   try {
+    // 1. Delete product document from products collection
     await deleteDoc(doc(db, "products", productId));
+    // 2. Permanently record in store_config.deletedProductIds to prevent resurrection
+    await setDoc(
+      doc(db, "store_config", "main_settings"),
+      {
+        deletedProductIds: arrayUnion(productId),
+        updatedAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
   } catch (error) {
     console.warn("Firestore delete product error:", error);
   }

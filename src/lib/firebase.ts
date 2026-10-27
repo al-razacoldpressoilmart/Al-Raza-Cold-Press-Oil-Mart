@@ -15,7 +15,9 @@ import {
   where,
   orderBy,
   limit,
-  setLogLevel
+  setLogLevel,
+  arrayUnion,
+  arrayRemove
 } from "firebase/firestore";
 import firebaseConfig from "../../firebase-applet-config.json";
 
@@ -143,5 +145,7 @@ export {
   query,
   where,
   orderBy,
-  limit
+  limit,
+  arrayUnion,
+  arrayRemove
 };

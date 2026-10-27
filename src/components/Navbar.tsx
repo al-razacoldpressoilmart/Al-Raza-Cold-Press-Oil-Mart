@@ -80,7 +80,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <a
               id="top-whatsapp-link"
-              href={`https://wa.me/${(storeConfig.whatsappNumber || "923292832225").replace(/[^0-9]/g, "")}?text=${encodeURIComponent("Hello! I would like to inquire about Al Raza cold pressed oils, spices, and chakki atta.")}`}
+              href={`https://wa.me/${(storeConfig.whatsappNumber || "923292832225").replace(/[^0-9]/g, "")}?text=${encodeURIComponent("Hello! I would like to inquire about Al Raza cold pressed oils, spices, and stone-ground flour.")}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-emerald-200 hover:text-white font-medium"
@@ -103,7 +103,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             {!logoError ? (
               <img
-                src={(storeConfig.logoUrl && storeConfig.logoUrl.trim() !== "") ? storeConfig.logoUrl : "/logo.webp"}
+                src={(storeConfig.logoUrl && storeConfig.logoUrl.trim() !== "") ? storeConfig.logoUrl : "/logo.svg"}
                 alt={storeConfig.brandName}
                 width={44}
                 height={44}
@@ -162,7 +162,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="px-3.5 py-2 rounded-xl text-slate-700 hover:text-emerald-700 hover:bg-emerald-50 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <Wheat className="w-4 h-4 text-amber-700" />
-              <span>Chakki Atta & Flour</span>
+              <span>Stone-Ground Flour</span>
             </button>
 
             {/* Hair Oil & Beauty Section */}
@@ -207,7 +207,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <input
                     id="navbar-search-input"
                     type="text"
-                    placeholder="Search oils, spices, atta..."
+                    placeholder="Search oils, spices, whole wheat flour..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full bg-transparent border-none text-xs text-slate-900 placeholder-slate-400 focus:outline-none ml-2"
@@ -293,7 +293,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold text-slate-800 hover:bg-amber-50 hover:text-amber-800 transition-colors"
           >
             <Wheat className="w-4 h-4 text-amber-700" />
-            <span>Chakki Atta & Flour</span>
+            <span>Stone-Ground Flour</span>
           </button>
 
           <button

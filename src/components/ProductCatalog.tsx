@@ -146,7 +146,7 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
           </h2>
 
           <p className="text-xs sm:text-sm text-slate-600">
-            Cold-pressed virgin oils, traditional stone-ground chakki flour, and unadulterated whole & ground spices.
+            Cold-pressed virgin oils, traditional stone-ground whole wheat flour, and unadulterated whole & ground spices.
           </p>
         </div>
 

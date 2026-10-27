@@ -14,7 +14,7 @@ const DEFAULT_REVIEWS_UR = [
     city: "لاہور (Lahore)",
     rating: 5,
     comment: "ماشاءاللہ سرسوں کا تیل اور دیسی گندم کا آٹا بالکل خالص ہے۔ روٹیاں انتہائی نرم بنتی ہیں اور پیکنگ بھی بہت معیاری تھی۔",
-    oil: "Cold Pressed Sarson Oil & Chakki Atta",
+    oil: "Cold Pressed Sarson Oil & Stone-Ground Flour",
     date: "تصدیق شدہ کسٹمر"
   },
   {
@@ -40,8 +40,8 @@ const DEFAULT_REVIEWS_EN = [
     name: "Haji Abdul Rasheed",
     city: "Lahore, Punjab",
     rating: 5,
-    comment: "Mashallah, the cold pressed mustard oil and stone-ground whole wheat atta are genuinely fresh and authentic. The rotis turn out exceptionally soft, and packaging was totally leak-proof.",
-    oil: "Cold Pressed Sarson Oil & Chakki Atta",
+    comment: "Mashallah, the cold pressed mustard oil and stone-ground whole wheat flour are genuinely fresh and authentic. The rotis turn out exceptionally soft, and packaging was totally leak-proof.",
+    oil: "Cold Pressed Sarson Oil & Stone-Ground Flour",
     date: "Verified Customer"
   },
   {

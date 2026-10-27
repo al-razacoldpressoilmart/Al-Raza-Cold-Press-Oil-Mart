@@ -49,9 +49,22 @@ export default function App() {
     userRef.current = user;
   }, [user]);
 
-  // 1. Products state (Persisted in localStorage so owner modifications persist)
+  // 1. Products state (Persisted in localStorage, respecting permanently deleted product IDs)
   const [products, setProducts] = useState<Product[]>(() => {
-    return PRODUCTS;
+    try {
+      const savedDeleted = localStorage.getItem("alraza_deleted_product_ids");
+      const deletedIds = savedDeleted ? new Set<string>(JSON.parse(savedDeleted)) : new Set<string>();
+      const savedProducts = localStorage.getItem("alraza_products");
+      if (savedProducts) {
+        const parsed: Product[] = JSON.parse(savedProducts);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.filter((p) => !deletedIds.has(p.id));
+        }
+      }
+      return PRODUCTS.filter((p) => !deletedIds.has(p.id));
+    } catch {
+      return PRODUCTS;
+    }
   });
 
   // 2. Store Config state (Persisted in localStorage)
@@ -260,31 +273,53 @@ export default function App() {
 
     const unsubProducts = subscribeProducts((remoteProducts) => {
       if (remoteProducts) {
-        if (remoteProducts.length > 0) {
-          // Merge remote products, preserving default catalog items not yet in remote, and clean legacy image paths
-          setProducts(() => {
-            const cleanRemote = remoteProducts.map(p => {
-              let img = p.heroImage?.trim() || "";
-              if (!img || img.includes("olive_plastic_bottle") || img.includes("1786261283172")) {
-                img = "/olive_plastic_bottle.webp";
-              }
-              return { ...p, heroImage: img };
-            });
-            const remoteMap = new Map(cleanRemote.map(p => [p.id, p]));
+        // Collect persistently deleted product IDs from localStorage and storeConfig
+        let localDeleted: string[] = [];
+        try {
+          const raw = localStorage.getItem("alraza_deleted_product_ids");
+          if (raw) localDeleted = JSON.parse(raw);
+        } catch {}
+
+        setStoreConfig((currentConfig) => {
+          const cloudDeleted = currentConfig.deletedProductIds || [];
+          const allDeletedSet = new Set([...localDeleted, ...cloudDeleted]);
+
+          if (remoteProducts.length > 0) {
+            // Filter out any deleted products from remote catalog
+            const cleanRemote = remoteProducts
+              .filter((p) => !allDeletedSet.has(p.id))
+              .map((p) => {
+                let img = p.heroImage?.trim() || "";
+                if (!img || img.includes("olive_plastic_bottle") || img.includes("1786261283172")) {
+                  img = "/olive_plastic_bottle.webp";
+                }
+                return { ...p, heroImage: img };
+              });
+
+            const remoteMap = new Map(cleanRemote.map((p) => [p.id, p]));
             const combined = [...cleanRemote];
-            PRODUCTS.forEach(dp => {
-              if (!remoteMap.has(dp.id)) {
+
+            // Only add default products if they were NEVER deleted by the owner
+            PRODUCTS.forEach((dp) => {
+              if (!remoteMap.has(dp.id) && !allDeletedSet.has(dp.id)) {
                 combined.push(dp);
               }
             });
-            return combined;
-          });
-        } else {
-          // If Firestore is completely empty, initialize with default products
-          setProducts(PRODUCTS);
-          PRODUCTS.forEach(p => saveProductToFirestore(p).catch(() => {}));
-        }
-        localStorage.removeItem("alraza_deleted_product_ids");
+
+            setProducts(combined);
+            try {
+              localStorage.setItem("alraza_products", JSON.stringify(combined));
+            } catch {}
+          } else {
+            // If Firestore is completely empty, initialize with default products (excluding any deleted ones)
+            const remainingDefaults = PRODUCTS.filter((p) => !allDeletedSet.has(p.id));
+            setProducts(remainingDefaults);
+            if (allDeletedSet.size === 0) {
+              PRODUCTS.forEach((p) => saveProductToFirestore(p).catch(() => {}));
+            }
+          }
+          return currentConfig;
+        });
       }
     });
 
@@ -670,6 +705,27 @@ export default function App() {
       return next;
     });
 
+    // Unmark from deleted IDs in localStorage and storeConfig if it was previously deleted
+    try {
+      const raw = localStorage.getItem("alraza_deleted_product_ids");
+      if (raw) {
+        const deletedArr: string[] = JSON.parse(raw);
+        const filtered = deletedArr.filter((id) => id !== updatedProduct.id);
+        localStorage.setItem("alraza_deleted_product_ids", JSON.stringify(filtered));
+      }
+    } catch {}
+
+    setStoreConfig((prev) => {
+      const curDeleted = prev.deletedProductIds || [];
+      if (curDeleted.includes(updatedProduct.id)) {
+        return {
+          ...prev,
+          deletedProductIds: curDeleted.filter((id) => id !== updatedProduct.id),
+        };
+      }
+      return prev;
+    });
+
     // Save product to Firestore
     saveProductToFirestore(updatedProduct).catch((err) =>
       console.warn("Firestore product save error:", err)
@@ -684,7 +740,26 @@ export default function App() {
   };
 
   const handleDeleteProduct = (productId: string) => {
-    // Immediately remove from product catalog state (triggers instant synchronous re-render)
+    // 1. Persistently track deleted product ID in localStorage
+    try {
+      const raw = localStorage.getItem("alraza_deleted_product_ids");
+      const currentDeleted: string[] = raw ? JSON.parse(raw) : [];
+      if (!currentDeleted.includes(productId)) {
+        currentDeleted.push(productId);
+        localStorage.setItem("alraza_deleted_product_ids", JSON.stringify(currentDeleted));
+      }
+    } catch {}
+
+    // 2. Track deleted ID in storeConfig state
+    setStoreConfig((prev) => {
+      const prevDeleted = prev.deletedProductIds || [];
+      if (!prevDeleted.includes(productId)) {
+        return { ...prev, deletedProductIds: [...prevDeleted, productId] };
+      }
+      return prev;
+    });
+
+    // 3. Immediately remove from product catalog state
     setProducts((prev) => {
       const updated = prev.filter((p) => p.id !== productId);
       try {
@@ -695,7 +770,7 @@ export default function App() {
       return updated;
     });
 
-    // 3. Remove from cart if item belongs to deleted product
+    // 4. Remove from cart if item belongs to deleted product
     setCartItems((prev) => {
       const updatedCart = prev.filter((item) => item.product.id !== productId);
       try {
@@ -706,12 +781,12 @@ export default function App() {
       return updatedCart;
     });
 
-    // 4. Close detail modal immediately if open for this product
+    // 5. Close detail modal immediately if open for this product
     if (selectedProduct && selectedProduct.id === productId) {
       setSelectedProduct(null);
     }
 
-    // 5. Remove permanently from Firestore database
+    // 6. Remove permanently from Firestore database
     deleteProductFromFirestore(productId).catch((err) =>
       console.warn("Firestore delete product error:", err)
     );

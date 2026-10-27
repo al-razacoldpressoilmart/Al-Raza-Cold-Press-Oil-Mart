@@ -92,7 +92,7 @@ export const Footer: React.FC<FooterProps> = ({
                 <Wheat className="w-4 h-4" />
               </div>
               <h4 className="font-bold text-xs text-slate-900">
-                Stone-Ground Chakki Flour
+                Stone-Ground Whole Wheat Flour
               </h4>
               <p className="text-[11px] text-slate-500">
                 Bran &amp; Germ Intact • Zero Maida
@@ -180,7 +180,7 @@ export const Footer: React.FC<FooterProps> = ({
                   className="hover:text-emerald-700 transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
                   <Wheat className="w-3.5 h-3.5 text-amber-700" />
-                  <span>Chakki Atta &amp; Flour</span>
+                  <span>Stone-Ground Flour</span>
                 </button>
               </li>
               <li>

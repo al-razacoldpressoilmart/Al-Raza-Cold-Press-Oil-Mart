@@ -7,7 +7,7 @@ import olivePlasticBottle from './images/olive_plastic_bottle.webp';
 import woodPressGhani from './images/wood_press_ghani.webp';
 
 export const ASSETS = {
-  logo: "/logo.webp",
+  logo: "/logo.svg",
   heroBanner: "/hero-banner.webp",
   heroOilsDisplay: "/hero-banner.webp",
   woodPressGhani,

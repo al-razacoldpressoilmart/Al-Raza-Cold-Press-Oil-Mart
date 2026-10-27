@@ -100,7 +100,7 @@ export const WholesaleBulkOrderForm: React.FC<WholesaleBulkOrderFormProps> = ({
     switch (cat) {
       case "oils": return "Cold Pressed Oils (Drums & Canisters: 5L - 200L)";
       case "spices": return "Spices & Masalajat (Bulk Sacks: 5kg - 50kg)";
-      case "flour": return "Chakki Atta & Flour (Bulk Bags: 20kg - 100kg)";
+      case "flour": return "Stone-Ground Flour & Grains (Bulk Bags: 20kg - 100kg)";
       default: return "Mixed Grocery & Commodities";
     }
   };
@@ -308,7 +308,7 @@ Please provide your wholesale price list and delivery timeline.`;
                     <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center mb-2">
                       <Wheat className="w-4 h-4" />
                     </div>
-                    <p className="text-xs font-bold">Chakki Atta & Flour</p>
+                    <p className="text-xs font-bold">Stone-Ground Flour</p>
                     <p className="text-[10px] text-slate-500 mt-0.5">20kg, 40kg, 100kg sacks</p>
                   </button>
 
@@ -417,7 +417,7 @@ Please provide your wholesale price list and delivery timeline.`;
                     <input
                       type="text"
                       required
-                      placeholder="e.g. 100kg Whole Wheat Atta + 50 Litres Mustard Oil"
+                      placeholder="e.g. 100kg Whole Wheat Flour + 50 Litres Mustard Oil"
                       value={estimatedQuantity}
                       onChange={(e) => setEstimatedQuantity(e.target.value)}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-xs"

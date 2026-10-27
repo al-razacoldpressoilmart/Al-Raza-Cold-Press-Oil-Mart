@@ -475,10 +475,10 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
   ];
 
   const FLOUR_PRESET_IMAGES = [
-    { label: "Chakki Atta", url: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80" },
-    { label: "Chana Besan", url: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=800&q=80" },
+    { label: "Stone-Ground Whole Wheat Flour", url: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80" },
+    { label: "Chana Besan (Gram Flour)", url: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=800&q=80" },
     { label: "Makai Corn Flour", url: "https://images.unsplash.com/photo-1551782450-a2132b4ba21d?auto=format&fit=crop&w=800&q=80" },
-    { label: "Barley Jau Atta", url: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&w=800&q=80" },
+    { label: "Barley Flour", url: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&w=800&q=80" },
   ];
 
   const OIL_PRESET_IMAGES = [
@@ -643,15 +643,15 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
   const handleOpenCreateFlour = () => {
     const newProd: Product = {
       id: `ar-flr-${Date.now()}`,
-      name: "Whole Wheat Chakki Atta",
-      nativeName: "Stone-Ground Whole Wheat Atta",
+      name: "Whole Wheat Stone-Ground Flour",
+      nativeName: "Stone-Ground Whole Wheat Flour",
       category: "flour",
       tag: "Stone Ground • Bran & Germ Intact",
       shortDescription: "Fresh stone-ground from cleaned golden desi wheat kernels. High fiber, unbleached, makes soft rotis.",
-      description: "Traditional natural stone chakki ground flour. Operates at slow RPM to preserve full wheat germ and dietary bran. Makes rotis that stay soft and fluffy.",
+      description: "Traditional natural stone mill ground flour. Operates at slow RPM to preserve full wheat germ and dietary bran. Makes rotis that stay soft and fluffy.",
       heroImage: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80",
       seedOrigin: "Selected Punjab Golden Wheat",
-      woodType: "Traditional Natural Stone Chakki",
+      woodType: "Traditional Natural Stone Mill",
       extractionTemp: "Slow RPM Cold Stone Grinding",
       smokePoint: "Baking & Roti Making",
       aromaTaste: "Sweet, nutty, earthy whole wheat taste",
@@ -1497,7 +1497,7 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                         className="px-3.5 py-2 bg-stone-800 hover:bg-stone-700 text-amber-200 font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer transition-all border border-amber-700"
                       >
                         <Wheat className="w-3.5 h-3.5" />
-                        <span>+ Add Flour (Atta)</span>
+                        <span>+ Add Flour (Stone-Ground)</span>
                       </button>
 
                       <button
@@ -1572,7 +1572,7 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                           >
                             <option value="oils">Cold Pressed Oils (تیل جات)</option>
                             <option value="spices">Spices & Masalajat (مصالحہ جات)</option>
-                            <option value="flour">Chakki Atta & Flour (چکی آٹا اور اناج)</option>
+                            <option value="flour">Stone-Ground Flour &amp; Grains (پتھر چکی آٹا اور اناج)</option>
                             <option value="beauty">Hair Oils & Beauty Care (ہیئر آئل اور بیوٹی)</option>
                           </select>
                         </div>

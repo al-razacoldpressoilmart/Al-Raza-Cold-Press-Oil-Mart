@@ -524,7 +524,7 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
                             )}
 
                             {flourProducts.length > 0 && (
-                              <optgroup label={isUrdu ? "چکی کا آٹا اور اناج (Chakki Atta & Flour)" : "Chakki Atta & Flour"}>
+                              <optgroup label={isUrdu ? "چکی کا آٹا اور اناج (Stone-Ground Flour & Grains)" : "Stone-Ground Flour & Grains"}>
                                 {flourProducts.map((p) => (
                                   <option key={p.id} value={p.id}>
                                     {isUrdu ? `${p.name} (${p.nativeName.split("(")[0].trim()})` : p.name}
