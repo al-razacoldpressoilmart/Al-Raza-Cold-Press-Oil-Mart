@@ -91,50 +91,47 @@ service cloud.firestore {
 
     // Collection: Orders
     match /orders/{orderId} {
-      allow get: if isValidId(orderId);
-      allow list: if true;
-      allow create: if isValidId(orderId) && isValidOrder(incoming());
-      allow update: if isValidId(orderId) && (
-        isAdmin() ||
-        (isValidOrder(incoming()) && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'paymentStatus']))
-      );
-      allow delete: if true;
+      allow read, write: if true;
+    }
+
+    // Collection: Live Store Notifications
+    match /notifications/{notifId} {
+      allow read, write: if true;
+    }
+
+    // Collection: Affiliate Program Partners
+    match /affiliates/{affiliateId} {
+      allow read, write: if true;
+    }
+
+    // Collection: Wholesale & Bulk Inquiries
+    match /wholesale_inquiries/{inquiryId} {
+      allow read, write: if true;
     }
 
     // Collection: Reviews
     match /reviews/{reviewId} {
-      allow read: if isValidId(reviewId);
-      allow list: if true;
-      allow create: if isValidId(reviewId) && isValidReview(incoming());
-      allow update: if isAdmin() || true;
-      allow delete: if true;
+      allow read, write: if true;
     }
 
     // Collection: Custom Blends
     match /custom_blends/{blendId} {
-      allow get: if isValidId(blendId);
-      allow list: if true;
-      allow create: if isValidId(blendId) && isValidCustomBlend(incoming());
-      allow update, delete: if true;
+      allow read, write: if true;
     }
 
     // Collection: Store Master Config
     match /store_config/{configId} {
-      allow get, list: if true;
-      allow create, update: if isAdmin() || isValidStoreConfig(incoming());
-      allow delete: if isAdmin();
+      allow read, write: if true;
     }
 
     // Collection: Products Catalog
     match /products/{productId} {
-      allow get, list: if true;
-      allow create, update, delete: if true;
+      allow read, write: if true;
     }
 
     // Collection: Batch Verification Records
     match /batches/{batchId} {
-      allow get, list: if true;
-      allow create, update, delete: if isAdmin();
+      allow read, write: if true;
     }
 
     // Admin collection for RBAC

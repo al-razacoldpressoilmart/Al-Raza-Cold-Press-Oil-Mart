@@ -87,13 +87,24 @@ export const GoogleWorkspaceModal: React.FC<GoogleWorkspaceModalProps> = ({
     setIsLoading(true);
     setStatusMessage(null);
     try {
-      const { user, accessToken: token } = await signInWithGoogleWorkspace();
+      const res = await signInWithGoogleWorkspace();
+      if (!res) {
+        // User closed or dismissed the popup window without completing sign-in
+        return;
+      }
+      const { user, accessToken: token } = res;
       setCurrentUser(user);
       setAccessToken(token);
       showStatus("success", `Connected as ${user.email}`);
       await loadWorkspaceData(token);
     } catch (err: any) {
-      console.error(err);
+      if (
+        err?.code === "auth/popup-closed-by-user" ||
+        err?.message?.includes("popup-closed-by-user") ||
+        err?.code === "auth/cancelled-popup-request"
+      ) {
+        return;
+      }
       showStatus("error", err.message || "Failed to sign in with Google Workspace.");
     } finally {
       setIsLoading(false);

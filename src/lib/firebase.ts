@@ -100,8 +100,15 @@ export async function signInWithGoogle(): Promise<User | null> {
   try {
     const result = await signInWithPopup(auth, googleProvider);
     return result.user;
-  } catch (error) {
-    console.error("Google sign-in error:", error);
+  } catch (error: any) {
+    if (
+      error?.code === "auth/popup-closed-by-user" ||
+      error?.message?.includes("popup-closed-by-user") ||
+      error?.code === "auth/cancelled-popup-request"
+    ) {
+      return null;
+    }
+    console.warn("Google sign-in notice:", error?.message || error);
     throw error;
   }
 }

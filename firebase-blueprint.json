@@ -361,12 +361,68 @@
         }
       },
       "required": ["id", "name", "category"]
+    },
+    "Notification": {
+      "title": "Live Store Notification",
+      "description": "Real-time alert for new orders, affiliate signups, inquiries, and reviews",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["order", "affiliate", "wholesale", "review", "system"] },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "isRead": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "type", "title", "message", "createdAt"]
+    },
+    "Affiliate": {
+      "title": "Affiliate Partner",
+      "description": "Registered brand ambassador and affiliate promoter",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "fullName": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "referralCode": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "fullName", "phone", "referralCode", "createdAt"]
+    },
+    "WholesaleInquiry": {
+      "title": "Wholesale Bulk Inquiry",
+      "description": "Commercial supply inquiry from restaurant, retail mart, or bakery",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "businessName": { "type": "string" },
+        "contactPerson": { "type": "string" },
+        "phone": { "type": "string" },
+        "city": { "type": "string" },
+        "category": { "type": "string" },
+        "estimatedQuantity": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "contactPerson", "phone", "category", "estimatedQuantity", "createdAt"]
     }
   },
   "firestore": {
     "/orders/{orderId}": {
       "schema": "Order",
       "description": "Stores customer purchase orders and delivery tracking"
+    },
+    "/notifications/{notifId}": {
+      "schema": "Notification",
+      "description": "Real-time store event notifications stream"
+    },
+    "/affiliates/{affiliateId}": {
+      "schema": "Affiliate",
+      "description": "Stores affiliate partner applications and codes"
+    },
+    "/wholesale_inquiries/{inquiryId}": {
+      "schema": "WholesaleInquiry",
+      "description": "Stores B2B wholesale bulk order requests"
     },
     "/products/{productId}": {
       "schema": "Product",

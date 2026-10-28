@@ -27,7 +27,7 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-export async function signInWithGoogleWorkspace(): Promise<{ user: User; accessToken: string }> {
+export async function signInWithGoogleWorkspace(): Promise<{ user: User; accessToken: string } | null> {
   try {
     isSigningIn = true;
     const result = await signInWithPopup(auth, googleProvider);
@@ -38,7 +38,19 @@ export async function signInWithGoogleWorkspace(): Promise<{ user: User; accessT
     cachedAccessToken = credential.accessToken;
     return { user: result.user, accessToken: cachedAccessToken };
   } catch (error: any) {
-    console.error("Google Workspace Sign-in error:", error);
+    // Gracefully handle user cancelling or closing the popup window
+    if (
+      error?.code === "auth/popup-closed-by-user" ||
+      error?.message?.includes("popup-closed-by-user") ||
+      error?.code === "auth/cancelled-popup-request"
+    ) {
+      // User closed the popup window without completing login - not an application error
+      return null;
+    }
+    if (error?.code === "auth/popup-blocked" || error?.message?.includes("popup-blocked")) {
+      throw new Error("Sign-in popup was blocked by your browser. Please allow popups for this site.");
+    }
+    console.warn("Google Workspace Sign-in notice:", error?.message || error);
     throw error;
   } finally {
     isSigningIn = false;

@@ -13,7 +13,8 @@ import {
   Building2,
   Gift,
   MapPin,
-  Mail
+  Mail,
+  Bell
 } from "lucide-react";
 import { StoreConfig } from "../data/storeConfig";
 
@@ -22,6 +23,8 @@ interface NavbarProps {
   onOpenCart: () => void;
   onOpenOrderTracking?: () => void;
   onOpenWorkspace?: () => void;
+  unreadNotificationsCount?: number;
+  onOpenNotificationCenter?: () => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   activeSection: string;
@@ -35,6 +38,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenCart,
   onOpenOrderTracking,
   onOpenWorkspace,
+  unreadNotificationsCount = 0,
+  onOpenNotificationCenter,
   searchQuery,
   setSearchQuery,
   activeSection,
@@ -99,6 +104,22 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <Mail className="w-3.5 h-3.5 text-amber-300" />
                 <span>Google Workspace</span>
+              </button>
+            )}
+
+            {onOpenNotificationCenter && (
+              <button
+                id="top-notifications-btn"
+                onClick={onOpenNotificationCenter}
+                className="inline-flex items-center gap-1.5 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-200 hover:text-white font-bold px-2.5 py-0.5 rounded transition-colors cursor-pointer border border-emerald-700/60"
+              >
+                <Bell className="w-3.5 h-3.5 text-amber-400" />
+                <span>Notifications</span>
+                {unreadNotificationsCount > 0 && (
+                  <span className="bg-rose-500 text-white font-extrabold text-[9px] px-1.5 py-0.2 rounded-full animate-pulse">
+                    {unreadNotificationsCount}
+                  </span>
+                )}
               </button>
             )}
 
@@ -259,6 +280,24 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
 
+            {/* Live Store Notifications Bell */}
+            {onOpenNotificationCenter && (
+              <button
+                id="navbar-notification-bell-btn"
+                onClick={onOpenNotificationCenter}
+                className="relative p-2.5 text-slate-700 hover:text-emerald-800 hover:bg-emerald-50 border border-slate-200 rounded-xl transition-all cursor-pointer flex items-center justify-center shadow-2xs"
+                title="Live Store Notifications"
+                aria-label="Live Store Notifications"
+              >
+                <Bell className="w-4 h-4 text-emerald-800" />
+                {unreadNotificationsCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-rose-600 text-white font-extrabold text-[10px] w-5 h-5 rounded-full flex items-center justify-center shadow-xs animate-bounce">
+                    {unreadNotificationsCount > 9 ? "9+" : unreadNotificationsCount}
+                  </span>
+                )}
+              </button>
+            )}
+
             {/* Cart Button */}
             <button
               id="navbar-cart-btn"
@@ -352,6 +391,26 @@ export const Navbar: React.FC<NavbarProps> = ({
               <MapPin className="w-4 h-4 text-emerald-600" />
               <span>Physical Marts & Pressing Mill (Map)</span>
             </button>
+
+            {onOpenNotificationCenter && (
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  onOpenNotificationCenter();
+                }}
+                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-slate-900 text-white text-left text-sm font-bold shadow-xs transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Bell className="w-4 h-4 text-amber-400" />
+                  <span>Live Store Notifications</span>
+                </div>
+                {unreadNotificationsCount > 0 && (
+                  <span className="bg-rose-500 text-white font-extrabold text-xs px-2 py-0.5 rounded-full">
+                    {unreadNotificationsCount} new
+                  </span>
+                )}
+              </button>
+            )}
 
             {onOpenWorkspace && (
               <button

@@ -18,6 +18,7 @@ import {
 import { StoreConfig } from "../data/storeConfig";
 import { AffiliatePartner } from "../types";
 import { sendAffiliateEmailNotification, generateAffiliateWhatsAppUrl } from "../services/notificationService";
+import { saveAffiliateToFirestore } from "../services/liveNotificationService";
 
 interface AffiliateProgramSectionProps {
   storeConfig: StoreConfig;
@@ -81,6 +82,12 @@ export const AffiliateProgramSection: React.FC<AffiliateProgramSectionProps> = (
 
     setRegisteredPartner(newPartner);
     setIsRegistered(true);
+
+    // Save to Firebase Firestore & trigger live notification
+    saveAffiliateToFirestore({
+      ...newPartner,
+      fullName: newPartner.name,
+    }).catch((err) => console.warn("Firestore affiliate sync:", err));
 
     // 1. Dispatch real-time email notification directly to store owner's Gmail
     sendAffiliateEmailNotification(
