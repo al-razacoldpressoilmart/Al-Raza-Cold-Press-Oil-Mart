@@ -90,6 +90,35 @@ export const WholesaleBulkOrderForm: React.FC<WholesaleBulkOrderFormProps> = ({
       // localStorage fallback
     }
 
+    // 1. Dispatch email notification to owner's Gmail
+    const targetEmail = storeConfig.notificationEmail || "tshirtsprintingworld@gmail.com";
+    fetch(`https://formsubmit.co/ajax/${encodeURIComponent(targetEmail)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({
+        _subject: `🏭 [WHOLESALE INQUIRY] ${newInquiry.businessName} - ${newInquiry.contactPerson}`,
+        _template: "table",
+        _captcha: "false",
+        "Inquiry ID": newInquiry.id,
+        "Business / Buyer": newInquiry.businessName,
+        "Contact Person": newInquiry.contactPerson,
+        "Mobile / WhatsApp": newInquiry.phone,
+        "City": newInquiry.city,
+        "Category": getCategoryTitle(newInquiry.category),
+        "Quantity Needed": newInquiry.estimatedQuantity,
+        "Frequency": newInquiry.frequency,
+        "Special Notes": newInquiry.notes || "None",
+      }),
+    }).catch(() => {});
+
+    // 2. Auto-prompt WhatsApp
+    setTimeout(() => {
+      try {
+        const waClean = (storeConfig.whatsappNumber || "923292832225").replace(/[^0-9]/g, "");
+        window.open(`https://wa.me/${waClean}?text=${generateWhatsAppMessage(newInquiry)}`, "_blank");
+      } catch {}
+    }, 400);
+
     setTimeout(() => {
       setIsSubmitting(false);
       setSubmittedInquiry(newInquiry);

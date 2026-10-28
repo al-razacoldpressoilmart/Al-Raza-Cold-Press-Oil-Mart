@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { StoreConfig } from "../data/storeConfig";
 import { AffiliatePartner } from "../types";
+import { sendAffiliateEmailNotification, generateAffiliateWhatsAppUrl } from "../services/notificationService";
 
 interface AffiliateProgramSectionProps {
   storeConfig: StoreConfig;
@@ -80,6 +81,45 @@ export const AffiliateProgramSection: React.FC<AffiliateProgramSectionProps> = (
 
     setRegisteredPartner(newPartner);
     setIsRegistered(true);
+
+    // 1. Dispatch real-time email notification directly to store owner's Gmail
+    sendAffiliateEmailNotification(
+      {
+        fullName: newPartner.name,
+        phone: newPartner.phone,
+        email: newPartner.email,
+        paymentMethod: newPartner.paymentMethod,
+        accountDetails: newPartner.accountDetails,
+        referralCode: newPartner.referralCode,
+        platform: newPartner.platform,
+        createdAt: newPartner.createdAt,
+      },
+      storeConfig
+    ).catch((err) => {
+      console.warn("Affiliate email notification error:", err);
+    });
+
+    // 2. Automatically prompt opening WhatsApp message to owner (03292832225)
+    setTimeout(() => {
+      try {
+        const waUrl = generateAffiliateWhatsAppUrl(
+          {
+            fullName: newPartner.name,
+            phone: newPartner.phone,
+            email: newPartner.email,
+            paymentMethod: newPartner.paymentMethod,
+            accountDetails: newPartner.accountDetails,
+            referralCode: newPartner.referralCode,
+            platform: newPartner.platform,
+            createdAt: newPartner.createdAt,
+          },
+          storeConfig
+        );
+        window.open(waUrl, "_blank");
+      } catch {
+        // Popups might be blocked; button remains visible on screen
+      }
+    }, 400);
   };
 
   return (
@@ -247,6 +287,32 @@ export const AffiliateProgramSection: React.FC<AffiliateProgramSectionProps> = (
                     <span className="text-slate-500">Payout Destination:</span>
                     <span className="font-semibold text-slate-900">{registeredPartner.paymentMethod} ({registeredPartner.phone})</span>
                   </div>
+                </div>
+
+                <div className="space-y-3 pt-2">
+                  <a
+                    href={generateAffiliateWhatsAppUrl(
+                      {
+                        fullName: registeredPartner.name,
+                        phone: registeredPartner.phone,
+                        email: registeredPartner.email,
+                        paymentMethod: registeredPartner.paymentMethod,
+                        accountDetails: registeredPartner.accountDetails,
+                        referralCode: registeredPartner.referralCode,
+                        createdAt: registeredPartner.createdAt,
+                      },
+                      storeConfig
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-md flex items-center justify-center gap-2.5 transition-transform hover:scale-[1.02] text-xs sm:text-sm cursor-pointer"
+                  >
+                    <MessageCircle className="w-5 h-5 fill-current" />
+                    <span>واٹس ایپ پر اونر کو الرٹ بھیجیں (Notify Store Owner on WhatsApp)</span>
+                  </a>
+                  <p className="text-[11px] text-emerald-800 font-semibold bg-emerald-50 py-1.5 px-3 rounded-lg border border-emerald-200">
+                    ✓ اونر کے جی میل ({storeConfig.notificationEmail || "tshirtsprintingworld@gmail.com"}) پر الرٹ روانہ کر دیا گیا ہے۔
+                  </p>
                 </div>
 
                 <button

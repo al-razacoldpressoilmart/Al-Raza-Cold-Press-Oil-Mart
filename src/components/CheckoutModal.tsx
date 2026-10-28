@@ -20,6 +20,7 @@ import {
 import { CartItem } from "../types";
 import { StoreConfig } from "../data/storeConfig";
 import { NotificationManager } from "../utils/NotificationManager";
+import { sendOrderEmailNotification, generateOrderWhatsAppUrl } from "../services/notificationService";
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -180,8 +181,24 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     setCompletedOrder(orderPayload);
     setIsSuccess(true);
     triggerConfetti();
+
+    // 1. Dispatch real-time email notification directly to owner Gmail (tshirtsprintingworld@gmail.com)
+    sendOrderEmailNotification(orderPayload, storeConfig).catch((err) => {
+      console.warn("Checkout email dispatch note:", err);
+    });
+
     onOrderSuccess(orderPayload);
     setIsProcessing(false);
+
+    // 2. Automatically prompt opening WhatsApp message to owner (03292832225)
+    setTimeout(() => {
+      try {
+        const waUrl = generateOrderWhatsAppUrl(orderPayload, storeConfig);
+        window.open(waUrl, "_blank");
+      } catch {
+        // Popups might be blocked on mobile browsers; button remains on screen
+      }
+    }, 400);
   };
 
   const handleCopyTracking = () => {
@@ -194,25 +211,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   const generateWhatsAppUrl = () => {
     if (!completedOrder) return "";
-    const itemsText = cartItems
-      .map((it) => {
-        const size = it.product.sizes[it.selectedSizeIndex]?.size || "Standard";
-        return `• ${it.product.name} (${size}) x ${it.quantity}`;
-      })
-      .join("\n");
-
-    const message = `🌿 *NEW ORDER PLACED at ${storeConfig.brandName}*\n\n` +
-      `*Order ID:* #${completedOrder.orderId}\n` +
-      `*Customer:* ${customerName}\n` +
-      `*Phone:* ${customerPhone}\n` +
-      `*Address:* ${completedOrder.deliveryAddress}\n\n` +
-      `*Items Ordered:*\n${itemsText}\n\n` +
-      `*Total Amount:* Rs. ${finalTotal} (${completedOrder.paymentMethod})\n` +
-      (deliveryNotes ? `*Note:* ${deliveryNotes}\n` : "") +
-      `\nHello! I have placed this Cash on Delivery order. Please confirm dispatch.`;
-
-    const cleanNumber = (storeConfig.whatsappNumber || "923292832225").replace(/[^0-9]/g, "");
-    return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
+    return generateOrderWhatsAppUrl(completedOrder, storeConfig);
   };
 
   return (

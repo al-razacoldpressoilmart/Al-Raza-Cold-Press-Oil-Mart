@@ -88,7 +88,7 @@ export const DEFAULT_STORE_CONFIG: StoreConfig = {
   contactPhone2: "",
   whatsappNumber: "923292832225",
   email: "care@alrazaoilmart.com",
-  notificationEmail: "muhammad.farhan.04.208@gmail.com",
+  notificationEmail: "tshirtsprintingworld@gmail.com",
   address: "Shop #12-15, Main Organic Market Arcade, Commercial Area",
   city: "Lahore / Karachi",
   martTimings: "Monday – Saturday: 9:00 AM – 9:00 PM (Sunday Closed)",

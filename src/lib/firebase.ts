@@ -28,9 +28,10 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 setLogLevel("error");
 
 // CRITICAL: Initialize Firestore with explicit database ID and long polling auto-detect
+const databaseId = (firebaseConfig as any).firestoreDatabaseId || "ai-studio-alrazacoldpresso-40d92567-2507-436c-abd5-8d8064fd90b0";
 export const db = initializeFirestore(app, {
   experimentalAutoDetectLongPolling: true
-}, firebaseConfig.firestoreDatabaseId);
+}, databaseId);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 

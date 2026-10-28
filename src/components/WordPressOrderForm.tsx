@@ -24,6 +24,7 @@ import confetti from "canvas-confetti";
 import { Product } from "../types";
 import { StoreConfig } from "../data/storeConfig";
 import { NotificationManager } from "../utils/NotificationManager";
+import { sendOrderEmailNotification, generateOrderWhatsAppUrl } from "../services/notificationService";
 import { Language, TRANSLATIONS } from "../utils/translations";
 
 interface WordPressOrderFormProps {
@@ -254,12 +255,27 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
       body: `Order #${orderId} by ${orderPayload.customerName} for Rs. ${orderPayload.totalAmount}`,
     });
 
+    // 1. Dispatch real-time email notification directly to owner Gmail (tshirtsprintingworld@gmail.com)
+    sendOrderEmailNotification(orderPayload, storeConfig).catch((err) => {
+      console.warn("WordPress form email notification error:", err);
+    });
+
     // Save order in parent
     onOrderSuccess(orderPayload);
     triggerConfetti();
 
     setCompletedOrder(orderPayload);
     setIsSubmitting(false);
+
+    // 2. Automatically prompt opening WhatsApp message to owner (03292832225)
+    setTimeout(() => {
+      try {
+        const waUrl = generateOrderWhatsAppUrl(orderPayload, storeConfig);
+        window.open(waUrl, "_blank");
+      } catch {
+        // Popups might be blocked on mobile browsers; button remains on screen
+      }
+    }, 400);
 
     // Scroll to success box
     if (formRef.current) {
@@ -276,30 +292,7 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
 
   const generateWhatsAppUrl = () => {
     if (!completedOrder) return "";
-    const itemsList = completedOrder.items
-      .map((it: any) => {
-        const sz = it.product?.sizes?.[it.selectedSizeIndex]?.size || "Standard";
-        return `• ${it.product?.name} (${sz}) x ${it.quantity} = Rs. ${it.price * it.quantity}`;
-      })
-      .join("\n");
-
-    const message =
-      `🌿 *NEW ORDER (${storeConfig.brandName})*\n\n` +
-      `*Order ID:* #${completedOrder.orderId}\n` +
-      `*Customer Name:* ${completedOrder.customerName}\n` +
-      `*Phone:* ${completedOrder.customerPhone}\n` +
-      `*Address:* ${completedOrder.deliveryAddress}\n` +
-      `*City:* ${completedOrder.city}\n` +
-      `*Payment:* ${completedOrder.paymentMethod}\n\n` +
-      `*Order Items:*\n${itemsList}\n\n` +
-      `*Subtotal:* Rs. ${completedOrder.subtotal}\n` +
-      `*Delivery Fee:* ${completedOrder.deliveryFee === 0 ? "FREE" : `Rs. ${completedOrder.deliveryFee}`}\n` +
-      `*TOTAL PAYABLE:* Rs. ${completedOrder.totalAmount}\n\n` +
-      (completedOrder.deliveryNotes ? `*Notes:* ${completedOrder.deliveryNotes}\n\n` : "") +
-      `براہ کرم میرا آرڈر جلد سے جلد بھیج دیجیے گا۔ شکریہ!`;
-
-    const rawPhone = (storeConfig.whatsappNumber || "923001234567").replace(/[^0-9]/g, "");
-    return `https://wa.me/${rawPhone}?text=${encodeURIComponent(message)}`;
+    return generateOrderWhatsAppUrl(completedOrder, storeConfig);
   };
 
   const handleResetForm = () => {

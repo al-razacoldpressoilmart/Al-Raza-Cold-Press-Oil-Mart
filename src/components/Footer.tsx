@@ -228,6 +228,15 @@ export const Footer: React.FC<FooterProps> = ({
                   <span>Affiliate Program (Earn 10%)</span>
                 </button>
               </li>
+              <li>
+                <button
+                  onClick={() => handleNav("store-locations")}
+                  className="hover:text-emerald-700 transition-colors flex items-center gap-1.5 cursor-pointer text-slate-700 font-medium"
+                >
+                  <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Physical Marts &amp; Mill (Map)</span>
+                </button>
+              </li>
               {onOpenOrderTracking && (
                 <li>
                   <button

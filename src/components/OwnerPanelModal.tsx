@@ -46,7 +46,9 @@ import {
   Droplet,
   Flame,
   Wheat,
-  Percent
+  Percent,
+  Mail,
+  HardDrive
 } from "lucide-react";
 import { Product, ProductReview, AffiliatePartner } from "../types";
 import { COLOR_THEMES, ColorTheme } from "../data/themes";
@@ -79,6 +81,7 @@ interface OwnerPanelModalProps {
   onDeleteReview?: (reviewId: string) => void;
   onToggleFeatureReview?: (reviewId: string) => void;
   onSaveOwnerReply?: (reviewId: string, replyText: string) => void;
+  onOpenWorkspace?: () => void;
 }
 
 export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
@@ -99,6 +102,7 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
   onDeleteReview = () => {},
   onToggleFeatureReview = () => {},
   onSaveOwnerReply = () => {},
+  onOpenWorkspace,
 }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
@@ -1002,6 +1006,20 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                 <Users className="w-4 h-4" />
                 <span>Affiliates ({affiliateList.length})</span>
               </button>
+
+              {onOpenWorkspace && (
+                <div className="pt-2 border-t border-amber-900/30">
+                  <button
+                    onClick={() => {
+                      onOpenWorkspace();
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/60 transition-all cursor-pointer whitespace-nowrap shadow-xs"
+                  >
+                    <Mail className="w-4 h-4 text-rose-400" />
+                    <span>Google Workspace</span>
+                  </button>
+                </div>
+              )}
 
             </div>
 
@@ -2620,15 +2638,43 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                         />
                       </div>
                       <div className="sm:col-span-2">
-                        <label className="text-emerald-400 font-bold block mb-1">Order Notifications Email (Real-time)</label>
-                        <p className="text-stone-500 text-[10px] mb-1.5">You will receive instant email alerts at this address whenever a customer places a new order.</p>
-                        <input
-                          type="email"
-                          value={configForm.notificationEmail || ""}
-                          onChange={(e) => setConfigForm({ ...configForm, notificationEmail: e.target.value })}
-                          placeholder="your-personal-email@gmail.com"
-                          className="w-full p-2 bg-stone-900 border border-emerald-900/50 rounded-lg text-white outline-none focus:border-emerald-500"
-                        />
+                        <label className="text-emerald-400 font-bold block mb-1">Order &amp; Affiliate Notifications Email (Real-time)</label>
+                        <p className="text-stone-400 text-xs mb-1.5">You will receive instant email alerts at this address whenever a customer places an order or an affiliate registers.</p>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <input
+                            type="email"
+                            value={configForm.notificationEmail || ""}
+                            onChange={(e) => setConfigForm({ ...configForm, notificationEmail: e.target.value })}
+                            placeholder="tshirtsprintingworld@gmail.com"
+                            className="flex-1 p-2 bg-stone-900 border border-emerald-900/50 rounded-lg text-white outline-none focus:border-emerald-500 text-xs"
+                          />
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const email = (configForm.notificationEmail || "tshirtsprintingworld@gmail.com").trim();
+                              try {
+                                await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(email)}`, {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json", "Accept": "application/json" },
+                                  body: JSON.stringify({
+                                    _subject: "🧪 Test Notification - Al Raza Mart Email Verification",
+                                    _template: "table",
+                                    _captcha: "false",
+                                    "Status": "Email verification working successfully!",
+                                    "Destination Email": email,
+                                    "Sent At": new Date().toLocaleString(),
+                                  })
+                                });
+                                alert(`Test email sent to ${email}! Please check your Gmail inbox (or spam) to confirm.`);
+                              } catch (e) {
+                                alert("Failed to send test email: " + e);
+                              }
+                            }}
+                            className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs rounded-lg transition-all cursor-pointer shrink-0"
+                          >
+                            🧪 Send Test Email
+                          </button>
+                        </div>
                       </div>
                       <div>
                         <label className="text-stone-400 block mb-1">Physical Mart Address</label>

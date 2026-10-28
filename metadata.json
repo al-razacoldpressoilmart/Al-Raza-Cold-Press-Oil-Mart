@@ -1,6 +1,6 @@
 {
   "name": "Al Raza Cold Press Oil Mart",
-  "description": "Cold-pressed virgin oils, fresh stone-ground spices, and whole wheat chakki atta delivered with Cash on Delivery across Pakistan.",
+  "description": "Cold-pressed virgin oils, fresh stone-ground spices, and stone-ground flour delivered with Cash on Delivery across Pakistan.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": []
 }

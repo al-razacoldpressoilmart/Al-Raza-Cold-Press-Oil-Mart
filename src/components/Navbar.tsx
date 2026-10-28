@@ -11,7 +11,9 @@ import {
   Flame, 
   Wheat, 
   Building2,
-  Gift
+  Gift,
+  MapPin,
+  Mail
 } from "lucide-react";
 import { StoreConfig } from "../data/storeConfig";
 
@@ -19,6 +21,7 @@ interface NavbarProps {
   cartCount: number;
   onOpenCart: () => void;
   onOpenOrderTracking?: () => void;
+  onOpenWorkspace?: () => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   activeSection: string;
@@ -31,6 +34,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   cartCount,
   onOpenCart,
   onOpenOrderTracking,
+  onOpenWorkspace,
   searchQuery,
   setSearchQuery,
   activeSection,
@@ -75,6 +79,26 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <Truck className="w-3.5 h-3.5 text-emerald-300" />
                 <span>Track Order</span>
+              </button>
+            )}
+
+            <button
+              id="top-store-map-btn"
+              onClick={() => handleNavClick("store-locations")}
+              className="inline-flex items-center gap-1 text-emerald-100 hover:text-white font-medium transition-colors cursor-pointer"
+            >
+              <MapPin className="w-3.5 h-3.5 text-emerald-300" />
+              <span>Store Map</span>
+            </button>
+
+            {onOpenWorkspace && (
+              <button
+                id="top-workspace-btn"
+                onClick={onOpenWorkspace}
+                className="inline-flex items-center gap-1 bg-emerald-900/80 hover:bg-emerald-900 text-amber-200 hover:text-amber-100 font-semibold px-2 py-0.5 rounded transition-colors cursor-pointer"
+              >
+                <Mail className="w-3.5 h-3.5 text-amber-300" />
+                <span>Google Workspace</span>
               </button>
             )}
 
@@ -185,14 +209,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>Wholesale & Bulk</span>
             </button>
 
-            {/* Affiliate Program Link */}
+            {/* Physical Marts Google Map */}
             <button
-              id="nav-affiliate-btn"
-              onClick={() => handleNavClick("affiliate-program")}
-              className="px-3.5 py-2 rounded-xl text-emerald-800 hover:bg-emerald-50 border border-emerald-200 font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+              id="nav-physical-marts-btn"
+              onClick={() => handleNavClick("store-locations")}
+              className="px-3.5 py-2 rounded-xl text-slate-700 hover:text-emerald-700 hover:bg-emerald-50 transition-all flex items-center gap-1.5 cursor-pointer font-medium"
             >
-              <Gift className="w-4 h-4 text-emerald-600" />
-              <span>Affiliate (Earn 10%)</span>
+              <MapPin className="w-4 h-4 text-emerald-600" />
+              <span>Physical Marts</span>
             </button>
           </nav>
 
@@ -320,6 +344,27 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Gift className="w-4 h-4 text-emerald-600" />
               <span>Affiliate Program (Earn 10%)</span>
             </button>
+
+            <button
+              onClick={() => handleNavClick("store-locations")}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-left text-sm font-bold text-slate-800 transition-colors"
+            >
+              <MapPin className="w-4 h-4 text-emerald-600" />
+              <span>Physical Marts & Pressing Mill (Map)</span>
+            </button>
+
+            {onOpenWorkspace && (
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  onOpenWorkspace();
+                }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-left text-sm font-bold text-emerald-900 transition-colors"
+              >
+                <Mail className="w-4 h-4 text-rose-500" />
+                <span>Google Workspace (Gmail & Drive)</span>
+              </button>
+            )}
 
             {onOpenOrderTracking && (
               <button

@@ -2,7 +2,6 @@ import express from "express";
 import path from "path";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
-import { GoogleGenAI } from "@google/genai";
 import twilio from "twilio";
 import nodemailer from "nodemailer";
 
@@ -12,25 +11,6 @@ const app = express();
 const PORT = 3000;
 
 app.use(express.json());
-
-// Lazy-initialized Gemini AI client
-let aiClient: GoogleGenAI | null = null;
-function getGenAI(): GoogleGenAI | null {
-  if (!process.env.GEMINI_API_KEY) {
-    return null;
-  }
-  if (!aiClient) {
-    aiClient = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY,
-      httpOptions: {
-        headers: {
-          "User-Agent": "aistudio-build",
-        },
-      },
-    });
-  }
-  return aiClient;
-}
 
 // Mock Batch Quality Certificate Database
 const BATCH_DATABASE: Record<string, {
@@ -229,43 +209,37 @@ app.post("/api/orders", async (req, res) => {
       console.log("Note: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, or TWILIO_FROM_NUMBER missing in env. Simulated SMS delivery.");
     }
 
-    // 2. Send Email Notification to Store Owner
-    const ownerEmail = "muhammad.farhan.04.208@gmail.com";
+    // 2. Send Real Email Notification to Store Owner (FormSubmit + fallback)
+    const ownerEmail = (orderData.targetEmail || "tshirtsprintingworld@gmail.com").trim();
     
-    // Robust, templated HTML Order Confirmation Email
-    const emailHtml = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #ddd;">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <h2 style="color: #2c3e50; margin: 0;">Al Raza Cold Pressed Oils</h2>
-          <p style="color: #27ae60; font-weight: bold; margin-top: 5px;">New Order Received</p>
-        </div>
-        
-        <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid #eee;">
-          <h3 style="color: #333; margin-top: 0; border-bottom: 2px solid #27ae60; padding-bottom: 10px;">Order Details</h3>
-          <p><strong>Tracking ID:</strong> <span style="color: #e67e22; font-family: monospace; font-size: 1.1em;">${orderData.orderId}</span></p>
-          <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
-          <p><strong>Total Amount:</strong> <span style="font-weight: bold; color: #27ae60;">Rs. ${orderData.totalAmount}</span></p>
-          <p><strong>Payment Method:</strong> ${orderData.paymentMethod || "Cash on Delivery"}</p>
-        </div>
-
-        <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid #eee; margin-top: 15px;">
-          <h3 style="color: #333; margin-top: 0; border-bottom: 2px solid #27ae60; padding-bottom: 10px;">Customer Information</h3>
-          <p><strong>Name:</strong> ${orderData.customerName}</p>
-          <p><strong>Phone:</strong> ${orderData.customerPhone}</p>
-          <p><strong>Email:</strong> ${orderData.customerEmail || "Not Provided"}</p>
-          <p><strong>Delivery Address:</strong> ${orderData.deliveryAddress}</p>
-        </div>
-
-        <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid #eee; margin-top: 15px;">
-          <h3 style="color: #333; margin-top: 0; border-bottom: 2px solid #27ae60; padding-bottom: 10px;">Items Ordered</h3>
-          <pre style="font-family: inherit; white-space: pre-wrap; background: #f8f8f8; padding: 10px; border-radius: 5px;">${orderData.itemsSummary}</pre>
-        </div>
-
-        <div style="text-align: center; margin-top: 25px; color: #7f8c8d; font-size: 0.9em;">
-          <p>This is an automated notification from the Al Raza Mart Server.</p>
-        </div>
-      </div>
-    `;
+    // Dispatch via FormSubmit from backend
+    try {
+      await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(ownerEmail)}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: JSON.stringify({
+          _subject: `🚨 [NEW ORDER #${orderData.orderId}] Rs. ${orderData.totalAmount} - ${orderData.customerName}`,
+          _template: "table",
+          _captcha: "false",
+          "Order ID": `#${orderData.orderId}`,
+          "Customer Name": orderData.customerName,
+          "Customer Phone": orderData.customerPhone,
+          "Customer Email": orderData.customerEmail || "Not Provided",
+          "Delivery Address": orderData.deliveryAddress,
+          "City": orderData.city || "Pakistan",
+          "Payment Method": orderData.paymentMethod || "Cash on Delivery",
+          "Total Payable": `Rs. ${orderData.totalAmount}`,
+          "Items Ordered": orderData.itemsSummary || "View in Admin Panel",
+          "Date": new Date().toLocaleString("en-PK", { timeZone: "Asia/Karachi" }),
+        }),
+      });
+      console.log(`Email notification successfully dispatched to ${ownerEmail}`);
+    } catch (fsErr) {
+      console.warn("Backend FormSubmit email dispatch error:", fsErr);
+    }
 
     if (emailTransporter) {
       try {
@@ -273,20 +247,15 @@ app.post("/api/orders", async (req, res) => {
           from: process.env.SMTP_USER,
           to: ownerEmail,
           subject: `New Order Received - ${orderData.orderId} - Al Raza Mart`,
-          html: emailHtml
+          html: `<h3>New Order Received: #${orderData.orderId}</h3><p>Amount: Rs. ${orderData.totalAmount}</p><p>Customer: ${orderData.customerName} (${orderData.customerPhone})</p><pre>${orderData.itemsSummary}</pre>`
         });
-        console.log("Email notification sent successfully.");
       } catch (emailErr) {
-        console.error("Failed to send Email:", emailErr);
+        console.error("Nodemailer dispatch note:", emailErr);
       }
-    } else {
-      console.log(`[Email Mock] Email to ${ownerEmail}:`, emailHtml);
-      console.log("Note: SMTP_USER and SMTP_PASS missing in env. Simulated Email delivery. The client-side FormSubmit is still running as fallback.");
     }
 
     // 3. Instant Push Notification via Ntfy.sh (No Auth Required)
     try {
-      // Use dynamic fetch to Ntfy
       await fetch("https://ntfy.sh/alraza_coldpress_orders", {
         method: "POST",
         body: `Order ID: ${orderData.orderId}\nCustomer: ${orderData.customerName}\nAmount: Rs. ${orderData.totalAmount}\nItems: ${orderData.itemsSummary || "View details in panel"}`,
@@ -296,9 +265,8 @@ app.post("/api/orders", async (req, res) => {
           "Priority": "high"
         }
       });
-      console.log("Ntfy push notification sent!");
     } catch (e) {
-      console.error("Ntfy push failed", e);
+      console.error("Ntfy push error:", e);
     }
 
     res.json({ success: true, message: "Order processed and notifications triggered successfully." });
@@ -308,76 +276,56 @@ app.post("/api/orders", async (req, res) => {
   }
 });
 
-// Oil Wellness & Recommendation AI Advisor Endpoint
-app.post("/api/gemini/oil-advisor", async (req, res) => {
+// Affiliate Partner Registration Notification API
+app.post("/api/notify-affiliate", async (req, res) => {
   try {
-    const { query, healthGoal, cookingStyle, concern, currentDiet } = req.body;
+    const affiliate = req.body;
+    const ownerEmail = (affiliate.targetEmail || "tshirtsprintingworld@gmail.com").trim();
+    console.log("New Affiliate Registered:", affiliate.fullName);
 
-    const ai = getGenAI();
-
-    // Fallback if no API key configured
-    if (!ai) {
-      return res.json({
-        advice: `Based on your interest in ${healthGoal || concern || "cold pressed pure oils"}, Al Raza Cold Press Oil Mart recommends:
-- **Daily Cooking**: Wood Pressed Groundnut (Peanut) Oil (high smoke point 225°C, balanced MUFA/PUFA, zero cholesterol).
-- **Heart & Immunity**: Extra Virgin Coconut Oil (Lauric acid) & Cold Pressed Black Seed / Kalonji Oil (Thymoquinone).
-- **South Indian & Traditional Tadka**: Wood Pressed Gingelly (Sesame) Oil (Rich Sesamol & Natural Antioxidants).
-- **Hair & Skin Nourishment**: Pure Sweet Almond (Badam Roghan) & Virgin Coconut Oil.
-
-*All Al Raza oils are extracted on slow-moving wooden churners (Mara Chekku) below 38°C to retain all natural enzymes, vitamins, and aroma.*`,
-        recommendedProducts: [
-          "Wood Pressed Groundnut Oil",
-          "Extra Virgin Coconut Oil",
-          "Cold Pressed Black Seed (Kalonji) Oil",
-          "Wood Pressed Sesame (Gingelly) Oil",
-        ],
-        usageTips: [
-          "Store in dark amber glass bottles away from direct sunlight.",
-          "Natural cold pressed oils have slight sediment at the bottom — this is proof of unrefined pure seed fiber.",
-          "Use medium heat for traditional cooking to preserve delicate polyphenols.",
-        ],
+    // Send FormSubmit email to owner
+    try {
+      await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(ownerEmail)}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: JSON.stringify({
+          _subject: `🤝 [NEW AFFILIATE PARTNER] ${affiliate.fullName} (${affiliate.referralCode})`,
+          _template: "table",
+          _captcha: "false",
+          "Partner Name": affiliate.fullName,
+          "Mobile / WhatsApp": affiliate.phone,
+          "Email Address": affiliate.email,
+          "Payout Method": affiliate.paymentMethod,
+          "Account Details": affiliate.accountDetails,
+          "Assigned Referral Code": affiliate.referralCode,
+          "Registration Date": affiliate.createdAt || new Date().toLocaleString(),
+        }),
       });
+      console.log(`Affiliate notification email sent to ${ownerEmail}`);
+    } catch (fsErr) {
+      console.warn("Affiliate FormSubmit dispatch error:", fsErr);
     }
 
-    const prompt = `You are the Master Oil Craftsman and Nutritional Wellness Sommelier at "Al Raza Cold Press Oil Mart". 
-Al Raza Mart specializes in 100% pure traditional wood-pressed (Mara Chekku / Kachi Ghani) unrefined virgin oils:
-1. Wood Pressed Groundnut (Peanut) Oil (High smoke point 225°C, heart health, ideal for deep frying, sautéing, curries)
-2. Extra Virgin Cold Pressed Coconut Oil (Raw copra extraction, Lauric acid, digestion, golden milk, skin/hair, baking)
-3. Wood Pressed Sesame / Gingelly Oil (Pressed with traditional palm jaggery, rich in Sesamol, ideal for pickles, tadka, dosa, Ayurvedic oil pulling)
-4. Kachi Ghani Mustard Oil (Strong natural pungency, Allyl isothiocyanate, northern curries, fish, joint massage)
-5. Cold Pressed Black Seed (Kalonji) Oil (Therapeutic Nigella Sativa, powerful immunity, asthma/digestion, 1 tsp morning ritual)
-6. Pure Sweet Almond (Badam Roghan) Oil (Brain food, baby massage, glowing skin, 100% edible)
-7. Cold Pressed Flaxseed (Alsi) Oil (Rich plant-based Omega-3 ALA, salad dressing, raw smoothies, heart cholesterol)
-8. Virgin Castor Oil (Wood pressed, thick therapeutic grade, hair density, eyebrow growth, gut cleanse)
+    // Push notification via Ntfy
+    try {
+      await fetch("https://ntfy.sh/alraza_coldpress_orders", {
+        method: "POST",
+        body: `New Affiliate Signup!\nName: ${affiliate.fullName}\nPhone: ${affiliate.phone}\nCode: ${affiliate.referralCode}\nAccount: ${affiliate.paymentMethod} - ${affiliate.accountDetails}`,
+        headers: {
+          "Title": "New Affiliate Partner Joined!",
+          "Tags": "handshake,money_with_wings",
+          "Priority": "high",
+        },
+      });
+    } catch {}
 
-User details:
-- User Question / Inquiry: ${query || "Recommend the best cold pressed oils for my family"}
-- Primary Health Goal: ${healthGoal || "Overall Vitality & Clean Eating"}
-- Cooking Style / Daily Usage: ${cookingStyle || "Everyday Indian / Global Cooking"}
-- Specific Health Concern or Preference: ${concern || "Heart health and reducing refined chemical oils"}
-- Diet / Lifestyle: ${currentDiet || "Standard healthy home cooking"}
-
-Please provide a structured, friendly, knowledgeable response with:
-1. Personalized recommendation explaining why specific Al Raza cold pressed oils match their lifestyle.
-2. Cooking / Usage rituals (including temperature guidelines, smoke points, internal or topical usage).
-3. The health comparison vs commercial refined oils (chemical hexane solvent vs slow cold wood press).
-4. A concise bullet list of Top 2-3 Recommended Al Raza Products.
-Keep formatting clean with clear markdown headings and bullet points.`;
-
-    const response = await ai.models.generateContent({
-      model: "gemini-3.6-flash",
-      contents: prompt,
-    });
-
-    res.json({
-      advice: response.text,
-    });
-  } catch (error: any) {
-    console.error("Gemini advisor error:", error);
-    res.status(500).json({
-      error: "Unable to consult Oil Advisor at the moment.",
-      message: error.message,
-    });
+    res.json({ success: true, message: "Affiliate notification processed successfully." });
+  } catch (error) {
+    console.error("Affiliate notification error:", error);
+    res.status(500).json({ error: "Failed to process affiliate notification." });
   }
 });
 

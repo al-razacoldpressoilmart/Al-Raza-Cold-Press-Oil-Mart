@@ -18,7 +18,10 @@ import { OwnerPanelModal } from "./components/OwnerPanelModal";
 import { OrderTrackingModal } from "./components/OrderTrackingModal";
 import { FloatingWhatsAppButton } from "./components/FloatingWhatsAppButton";
 import { AuthModal } from "./components/AuthModal";
+import { MartLocationMap } from "./components/MartLocationMap";
+import { GoogleWorkspaceModal } from "./components/GoogleWorkspaceModal";
 import { NotificationManager } from "./utils/NotificationManager";
+import { sendOrderEmailNotification } from "./services/notificationService";
 import { Language } from "./utils/translations";
 import { CheckCircle2, Shield, Settings, Sparkles, X } from "lucide-react";
 import { auth, logOutUser } from "./lib/firebase";
@@ -79,6 +82,9 @@ export default function App() {
         }
         if (!merged.logoUrl || merged.logoUrl.trim() === "") {
           merged.logoUrl = DEFAULT_STORE_CONFIG.logoUrl;
+        }
+        if (!merged.notificationEmail || merged.notificationEmail.includes("muhammad.farhan")) {
+          merged.notificationEmail = DEFAULT_STORE_CONFIG.notificationEmail;
         }
         return merged;
       }
@@ -157,7 +163,22 @@ export default function App() {
   const [isOwnerPanelOpen, setIsOwnerPanelOpen] = useState(false);
   const [isOrderTrackingOpen, setIsOrderTrackingOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false);
   const [trackingOrderId, setTrackingOrderId] = useState<string>("");
+  const [isMapsQuotaExceeded, setIsMapsQuotaExceeded] = useState(false);
+
+  // Google Maps Platform Quota Exceeded & Error Listener
+  useEffect(() => {
+    const handleQuotaExceeded = () => setIsMapsQuotaExceeded(true);
+    window.addEventListener("gmp-quota-exceeded", handleQuotaExceeded);
+    (window as any).gm_authFailure = () => {
+      console.warn("Google Maps Platform auth failure or quota limit encountered.");
+      setIsMapsQuotaExceeded(true);
+    };
+    return () => {
+      window.removeEventListener("gmp-quota-exceeded", handleQuotaExceeded);
+    };
+  }, []);
 
   const handleOpenOrderTracking = (orderId?: string) => {
     if (orderId) {
@@ -590,6 +611,11 @@ export default function App() {
   const handleOrderSuccess = (orderPayload: any) => {
     setOrders((prev) => [orderPayload, ...prev]);
 
+    // Trigger Real-Time Email Notification to Store Owner (tshirtsprintingworld@gmail.com)
+    sendOrderEmailNotification(orderPayload, storeConfig).catch((err) => {
+      console.warn("Order email notification error:", err);
+    });
+
     // Save order to Firestore
     try {
       const firestoreOrder: FirestoreOrder = {
@@ -864,6 +890,7 @@ export default function App() {
         cartCount={totalCartCount}
         onOpenCart={() => setIsCartOpen(true)}
         onOpenOrderTracking={handleOpenOrderTracking}
+        onOpenWorkspace={() => setIsWorkspaceModalOpen(true)}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         activeSection={activeSection}
@@ -907,6 +934,12 @@ export default function App() {
         {/* Affiliate & Partner Program */}
         <AffiliateProgramSection
           storeConfig={storeConfig}
+        />
+
+        {/* Physical Marts & Live Cold-Pressing Mill Google Maps */}
+        <MartLocationMap
+          storeConfig={storeConfig}
+          isQuotaExceeded={isMapsQuotaExceeded}
         />
 
         {/* Customer Reviews & Trust Badges */}
@@ -992,6 +1025,7 @@ export default function App() {
         onDeleteReview={handleDeleteReview}
         onToggleFeatureReview={handleToggleFeatureReview}
         onSaveOwnerReply={handleSaveOwnerReply}
+        onOpenWorkspace={() => setIsWorkspaceModalOpen(true)}
       />
 
       {/* Floating WhatsApp Support Button */}
@@ -1001,6 +1035,15 @@ export default function App() {
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
+      />
+
+      {/* Google Workspace Modal (Gmail & Google Drive) */}
+      <GoogleWorkspaceModal
+        isOpen={isWorkspaceModalOpen}
+        onClose={() => setIsWorkspaceModalOpen(false)}
+        orders={orders}
+        products={products}
+        storeConfig={storeConfig}
       />
 
       {/* 
