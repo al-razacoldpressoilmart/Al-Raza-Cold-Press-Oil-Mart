@@ -20,6 +20,13 @@ import { FloatingWhatsAppButton } from "./components/FloatingWhatsAppButton";
 import { AuthModal } from "./components/AuthModal";
 import { MartLocationMap } from "./components/MartLocationMap";
 import { GoogleWorkspaceModal } from "./components/GoogleWorkspaceModal";
+import { LiveNotificationCenterModal } from "./components/LiveNotificationCenterModal";
+import { LiveNotificationToast } from "./components/LiveNotificationToast";
+import {
+  StoreNotification,
+  subscribeLiveNotifications,
+  createStoreNotification,
+} from "./services/liveNotificationService";
 import { NotificationManager } from "./utils/NotificationManager";
 import { sendOrderEmailNotification } from "./services/notificationService";
 import { Language } from "./utils/translations";
@@ -61,7 +68,24 @@ export default function App() {
       if (savedProducts) {
         const parsed: Product[] = JSON.parse(savedProducts);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.filter((p) => !deletedIds.has(p.id));
+          const seen = new Set<string>();
+          const valid: Product[] = [];
+          parsed.forEach((p, idx) => {
+            if (!p || deletedIds.has(p.id)) return;
+            const safeId = p.id || `prod-local-${idx}`;
+            if (seen.has(safeId)) return;
+            seen.add(safeId);
+            const safeSizes = Array.isArray(p.sizes) && p.sizes.length > 0 ? p.sizes : [
+              { size: "Standard Pack", price: 500, originalPrice: 600, inStock: true, stockQuantity: 15, lowStockThreshold: 5 }
+            ];
+            valid.push({
+              ...p,
+              id: safeId,
+              sizes: safeSizes,
+              bestFor: Array.isArray(p.bestFor) ? p.bestFor : ["Daily Kitchen Cooking"],
+            });
+          });
+          if (valid.length > 0) return valid;
         }
       }
       return PRODUCTS.filter((p) => !deletedIds.has(p.id));
@@ -166,6 +190,42 @@ export default function App() {
   const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false);
   const [trackingOrderId, setTrackingOrderId] = useState<string>("");
   const [isMapsQuotaExceeded, setIsMapsQuotaExceeded] = useState(false);
+
+  // Live Notifications State
+  const [notifications, setNotifications] = useState<StoreNotification[]>([]);
+  const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
+  const [latestToastNotification, setLatestToastNotification] = useState<StoreNotification | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem("alraza_notif_sound");
+      return saved !== null ? JSON.parse(saved) : true;
+    } catch {
+      return true;
+    }
+  });
+
+  const handleToggleSound = () => {
+    setSoundEnabled((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("alraza_notif_sound", JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  // Real-Time Firebase Notifications Listener
+  useEffect(() => {
+    const unsubscribe = subscribeLiveNotifications(
+      (notifs) => {
+        setNotifications(notifs);
+      },
+      (newNotif) => {
+        setLatestToastNotification(newNotif);
+      }
+    );
+    return () => unsubscribe();
+  }, []);
 
   // Google Maps Platform Quota Exceeded & Error Listener
   useEffect(() => {
@@ -307,23 +367,43 @@ export default function App() {
 
           if (remoteProducts.length > 0) {
             // Filter out any deleted products from remote catalog
-            const cleanRemote = remoteProducts
-              .filter((p) => !allDeletedSet.has(p.id))
-              .map((p) => {
-                let img = p.heroImage?.trim() || "";
-                if (!img || img.includes("olive_plastic_bottle") || img.includes("1786261283172")) {
-                  img = "/olive_plastic_bottle.webp";
-                }
-                return { ...p, heroImage: img };
+            const seenIds = new Set<string>();
+            const cleanRemote: Product[] = [];
+
+            remoteProducts.forEach((p, idx) => {
+              if (!p || allDeletedSet.has(p.id)) return;
+              const safeId = p.id || `remote-prod-${idx}`;
+              if (seenIds.has(safeId)) return;
+              seenIds.add(safeId);
+
+              let img = p.heroImage?.trim() || "";
+              if (!img || img.includes("olive_plastic_bottle") || img.includes("1786261283172")) {
+                img = "/olive_plastic_bottle.webp";
+              }
+
+              const safeSizes = Array.isArray(p.sizes) && p.sizes.length > 0 ? p.sizes : [
+                { size: "Standard Pack", price: 500, originalPrice: 600, inStock: true, stockQuantity: 15, lowStockThreshold: 5 }
+              ];
+
+              cleanRemote.push({
+                ...p,
+                id: safeId,
+                heroImage: img,
+                sizes: safeSizes,
+                bestFor: Array.isArray(p.bestFor) ? p.bestFor : ["Daily Kitchen Cooking"],
+                rating: p.rating || 5.0,
+                reviewsCount: p.reviewsCount || 10,
               });
+            });
 
             const remoteMap = new Map(cleanRemote.map((p) => [p.id, p]));
             const combined = [...cleanRemote];
 
-            // Only add default products if they were NEVER deleted by the owner
+            // Only add default products if they were NEVER deleted by the owner and not in remoteMap
             PRODUCTS.forEach((dp) => {
               if (!remoteMap.has(dp.id) && !allDeletedSet.has(dp.id)) {
                 combined.push(dp);
+                remoteMap.set(dp.id, dp);
               }
             });
 
@@ -636,6 +716,20 @@ export default function App() {
     } catch (e) {
       console.warn("Order sync error:", e);
     }
+
+    // Push real-time in-app notification to Firestore & trigger sound chime
+    createStoreNotification({
+      type: "order",
+      title: `🚨 New Order #${orderPayload.orderId || "AR"} Received!`,
+      message: `${orderPayload.customerName || "Customer"} placed an order of Rs. ${orderPayload.totalAmount} (${orderPayload.deliveryAddress || orderPayload.city || "Pakistan"}).`,
+      data: {
+        orderId: orderPayload.orderId,
+        customerName: orderPayload.customerName,
+        customerPhone: orderPayload.customerPhone,
+        totalAmount: orderPayload.totalAmount,
+        city: orderPayload.city,
+      },
+    }).catch((err) => console.warn("Live notification creation error:", err));
     
     // Decrement stock for ordered items
     setProducts((prev) => {
@@ -671,6 +765,14 @@ export default function App() {
     };
     setReviews((prev) => [newRev, ...prev]);
     saveReviewToFirestore(newRev).catch((err) => console.warn("Firestore review sync:", err));
+
+    createStoreNotification({
+      type: "review",
+      title: `⭐ New Review by ${newRev.authorName}`,
+      message: `${newRev.authorName} rated ${newRev.rating}/5 stars: "${newRev.comment.slice(0, 60)}..."`,
+      data: newRev,
+    }).catch(() => {});
+
     showToast("Review Posted!", "Thank you for sharing your cold-pressed experience.");
   };
 
@@ -891,6 +993,8 @@ export default function App() {
         onOpenCart={() => setIsCartOpen(true)}
         onOpenOrderTracking={handleOpenOrderTracking}
         onOpenWorkspace={() => setIsWorkspaceModalOpen(true)}
+        unreadNotificationsCount={notifications.filter((n) => !n.isRead).length}
+        onOpenNotificationCenter={() => setIsNotificationCenterOpen(true)}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         activeSection={activeSection}
@@ -1044,6 +1148,27 @@ export default function App() {
         orders={orders}
         products={products}
         storeConfig={storeConfig}
+      />
+
+      {/* Real-Time Live Store Notification Center Modal */}
+      <LiveNotificationCenterModal
+        isOpen={isNotificationCenterOpen}
+        onClose={() => setIsNotificationCenterOpen(false)}
+        notifications={notifications}
+        soundEnabled={soundEnabled}
+        onToggleSound={handleToggleSound}
+        storeConfig={storeConfig}
+        onOpenOrderTracking={handleOpenOrderTracking}
+      />
+
+      {/* Floating On-Screen Notification Toast Alert */}
+      <LiveNotificationToast
+        notification={latestToastNotification}
+        onClose={() => setLatestToastNotification(null)}
+        onOpenCenter={() => {
+          setLatestToastNotification(null);
+          setIsNotificationCenterOpen(true);
+        }}
       />
 
       {/* 

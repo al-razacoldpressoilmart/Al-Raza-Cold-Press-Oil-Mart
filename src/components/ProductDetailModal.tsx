@@ -58,10 +58,25 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
   if (!product) return null;
 
-  const currentSize = product.sizes[selectedSizeIndex] || product.sizes[0];
-  const discountPercent = Math.round(
-    ((currentSize.originalPrice - currentSize.price) / currentSize.originalPrice) * 100
-  );
+  const safeSizes = Array.isArray(product?.sizes) && product.sizes.length > 0
+    ? product.sizes
+    : [
+        {
+          size: "Standard Pack",
+          price: 500,
+          originalPrice: 600,
+          inStock: true,
+          stockQuantity: 10,
+          lowStockThreshold: 3,
+        },
+      ];
+
+  const currentSize = safeSizes[selectedSizeIndex] || safeSizes[0];
+  const origPrice = currentSize.originalPrice || currentSize.price || 500;
+  const currPrice = currentSize.price || 500;
+  const discountPercent = origPrice > currPrice
+    ? Math.round(((origPrice - currPrice) / origPrice) * 100)
+    : 0;
 
   const stockQty = currentSize.stockQuantity ?? 10;
   const isOutOfStock = !!product.isOutOfStock || !currentSize.inStock || stockQty <= 0;
@@ -335,7 +350,7 @@ Salam Al Raza Mart! I would like to order this item directly via WhatsApp. Pleas
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-2 gap-2">
-                      {product.sizes.map((sizeOpt, idx) => {
+                      {safeSizes.map((sizeOpt, idx) => {
                         const optStock = sizeOpt.stockQuantity ?? 10;
                         const optOut = !sizeOpt.inStock || optStock <= 0;
                         const isSelected = selectedSizeIndex === idx;

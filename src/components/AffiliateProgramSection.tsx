@@ -315,10 +315,10 @@ export const AffiliateProgramSection: React.FC<AffiliateProgramSectionProps> = (
                     className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-md flex items-center justify-center gap-2.5 transition-transform hover:scale-[1.02] text-xs sm:text-sm cursor-pointer"
                   >
                     <MessageCircle className="w-5 h-5 fill-current" />
-                    <span>واٹس ایپ پر اونر کو الرٹ بھیجیں (Notify Store Owner on WhatsApp)</span>
+                    <span>Send Partner Alert on WhatsApp (03292832225)</span>
                   </a>
                   <p className="text-[11px] text-emerald-800 font-semibold bg-emerald-50 py-1.5 px-3 rounded-lg border border-emerald-200">
-                    ✓ اونر کے جی میل ({storeConfig.notificationEmail || "tshirtsprintingworld@gmail.com"}) پر الرٹ روانہ کر دیا گیا ہے۔
+                    ✓ Partner registration alert sent to owner Gmail ({storeConfig.notificationEmail || "tshirtsprintingworld@gmail.com"})
                   </p>
                 </div>
 

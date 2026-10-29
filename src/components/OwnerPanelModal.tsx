@@ -1728,10 +1728,11 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                             type="button"
                             onClick={() => {
                               const defaultSize = editingProduct.category === "spices" ? "250 Gram Pack" : editingProduct.category === "flour" ? "5 KG Bag" : "1 Litre Bottle";
+                              const currentSizes = Array.isArray(editingProduct.sizes) ? editingProduct.sizes : [];
                               setEditingProduct({
                                 ...editingProduct,
                                 sizes: [
-                                  ...editingProduct.sizes,
+                                  ...currentSizes,
                                   { size: defaultSize, price: 500, originalPrice: 600, inStock: true, stockQuantity: 25, lowStockThreshold: 5 },
                                 ],
                               });
@@ -1744,7 +1745,7 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                         </div>
 
                         <div className="space-y-2">
-                          {editingProduct.sizes.map((sz, idx) => (
+                          {(Array.isArray(editingProduct.sizes) ? editingProduct.sizes : []).map((sz, idx) => (
                             <div key={idx} className="p-2.5 bg-stone-900 rounded-xl border border-stone-800 grid grid-cols-1 sm:grid-cols-5 gap-2 items-center">
                               <div>
                                 <label className="text-[10px] text-stone-400 block">Size / Weight</label>
@@ -1891,7 +1892,8 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                   {/* Product Cards List with Out-Of-Stock Badges & 1-Click Toggle */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     {products.map((prod) => {
-                      const isProductOut = prod.isOutOfStock || prod.sizes.every((s) => !s.inStock || (s.stockQuantity ?? 0) <= 0);
+                      const sizesArr = Array.isArray(prod?.sizes) ? prod.sizes : [];
+                      const isProductOut = prod.isOutOfStock || (sizesArr.length > 0 && sizesArr.every((s) => !s.inStock || (s.stockQuantity ?? 0) <= 0));
 
                       return (
                         <div
@@ -1924,7 +1926,7 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                               <p className="text-xs text-amber-400 font-semibold truncate">{prod.nativeName}</p>
                               <p className="text-[11px] text-stone-400 mt-0.5 line-clamp-1">{prod.shortDescription}</p>
                               <p className="text-[10px] text-stone-400 mt-0.5">
-                                Category: <strong className="text-amber-300 uppercase">{prod.category}</strong> • {prod.sizes.length} pack sizes
+                                Category: <strong className="text-amber-300 uppercase">{prod.category}</strong> • {sizesArr.length} pack sizes
                               </p>
                             </div>
                           </div>
@@ -2648,32 +2650,49 @@ export const OwnerPanelModal: React.FC<OwnerPanelModalProps> = ({
                             placeholder="tshirtsprintingworld@gmail.com"
                             className="flex-1 p-2 bg-stone-900 border border-emerald-900/50 rounded-lg text-white outline-none focus:border-emerald-500 text-xs"
                           />
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              const email = (configForm.notificationEmail || "tshirtsprintingworld@gmail.com").trim();
-                              try {
-                                await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(email)}`, {
-                                  method: "POST",
-                                  headers: { "Content-Type": "application/json", "Accept": "application/json" },
-                                  body: JSON.stringify({
-                                    _subject: "🧪 Test Notification - Al Raza Mart Email Verification",
-                                    _template: "table",
-                                    _captcha: "false",
-                                    "Status": "Email verification working successfully!",
-                                    "Destination Email": email,
-                                    "Sent At": new Date().toLocaleString(),
-                                  })
-                                });
-                                alert(`Test email sent to ${email}! Please check your Gmail inbox (or spam) to confirm.`);
-                              } catch (e) {
-                                alert("Failed to send test email: " + e);
-                              }
-                            }}
-                            className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs rounded-lg transition-all cursor-pointer shrink-0"
-                          >
-                            🧪 Send Test Email
-                          </button>
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                const email = (configForm.notificationEmail || "tshirtsprintingworld@gmail.com").trim();
+                                try {
+                                  await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(email)}`, {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+                                    body: JSON.stringify({
+                                      _subject: "🧪 Test Notification - Al Raza Mart Email Verification",
+                                      _template: "table",
+                                      _captcha: "false",
+                                      "Store Notification": "SUCCESSFUL",
+                                      "Recipient Email": email,
+                                      "Sent At": new Date().toLocaleString(),
+                                      "Activation Note": "Please ensure you have confirmed FormSubmit activation if received in Spam folder.",
+                                    })
+                                  });
+                                  alert(`✅ Test email sent to ${email}!\n\nIMPORTANT FIRST-TIME STEP:\nCheck your Gmail INBOX and SPAM folder for an email from 'submissions@formsubmit.co' with the subject 'Action Required: Confirm your form endpoint'.\n\nClick the 'Activate Form' button in that email once. After that one-time confirmation, all order and affiliate emails will forward automatically!`);
+                                } catch (e) {
+                                  alert("Failed to send test email: " + e);
+                                }
+                              }}
+                              className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs rounded-lg transition-all cursor-pointer shrink-0"
+                            >
+                              🧪 Send Test Email (FormSubmit)
+                            </button>
+
+                            {onOpenWorkspace && (
+                              <button
+                                type="button"
+                                onClick={onOpenWorkspace}
+                                className="px-3.5 py-2 bg-rose-700 hover:bg-rose-600 text-white font-bold text-xs rounded-lg transition-all cursor-pointer shrink-0 flex items-center gap-1.5"
+                              >
+                                <Mail className="w-3.5 h-3.5" />
+                                <span>Send via Google Workspace Gmail API</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <div className="mt-2 p-2.5 bg-emerald-950/40 border border-emerald-900/60 rounded-xl text-[11px] text-emerald-200">
+                          💡 <strong>How to guarantee order emails:</strong> If you haven't received emails yet, open <span className="underline font-mono">mail.google.com</span>, search for <strong>formsubmit</strong> in your Spam/Junk folder, and click <em>"Activate Form"</em>. Alternatively, connect Google Workspace via the button above for direct Gmail REST API delivery!
                         </div>
                       </div>
                       <div>

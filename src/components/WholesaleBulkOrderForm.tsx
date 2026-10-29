@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { StoreConfig } from "../data/storeConfig";
 import { Product } from "../types";
+import { saveWholesaleInquiryToFirestore } from "../services/liveNotificationService";
 
 export interface WholesaleInquiry {
   id: string;
@@ -89,6 +90,11 @@ export const WholesaleBulkOrderForm: React.FC<WholesaleBulkOrderFormProps> = ({
     } catch {
       // localStorage fallback
     }
+
+    // Save to Firebase Firestore & trigger live notification
+    saveWholesaleInquiryToFirestore(newInquiry).catch((err) =>
+      console.warn("Firestore wholesale sync:", err)
+    );
 
     // 1. Dispatch email notification to owner's Gmail
     const targetEmail = storeConfig.notificationEmail || "tshirtsprintingworld@gmail.com";

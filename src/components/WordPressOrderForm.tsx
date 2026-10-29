@@ -129,7 +129,7 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
   // Calculations
   const calculatedItems = items.map((item) => {
     const product = products.find((p) => p.id === item.productId) || products[0];
-    const sizeOpt = product?.sizes[item.sizeIndex] || product?.sizes[0] || {
+    const sizeOpt = (Array.isArray(product?.sizes) && (product.sizes[item.sizeIndex] || product.sizes[0])) || {
       size: "Pack",
       price: 500,
       originalPrice: 600,
@@ -479,7 +479,12 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
                 <div className="space-y-3">
                   {items.map((item, idx) => {
                     const product = products.find((p) => p.id === item.productId) || products[0];
-                    const sizeOpt = product?.sizes[item.sizeIndex] || product?.sizes[0];
+                    const sizeOpt = (Array.isArray(product?.sizes) && (product.sizes[item.sizeIndex] || product.sizes[0])) || {
+                      size: "Pack",
+                      price: 500,
+                      originalPrice: 600,
+                      inStock: true,
+                    };
 
                     return (
                       <div 
@@ -538,7 +543,7 @@ export const WordPressOrderForm: React.FC<WordPressOrderFormProps> = ({
                             onChange={(e) => handleUpdateItemSize(idx, Number(e.target.value))}
                             className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                           >
-                            {product?.sizes.map((s, sIdx) => (
+                            {(Array.isArray(product?.sizes) ? product.sizes : []).map((s, sIdx) => (
                               <option key={sIdx} value={sIdx}>
                                 {s.size} — Rs. {s.price}
                               </option>

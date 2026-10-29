@@ -48,8 +48,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   if (!isOpen) return null;
 
   const subtotal = cartItems.reduce((sum, item) => {
-    const sizeOpt = item.product.sizes[item.selectedSizeIndex] || item.product.sizes[0];
-    return sum + sizeOpt.price * item.quantity;
+    const sizeOpt = (Array.isArray(item.product?.sizes) && (item.product.sizes[item.selectedSizeIndex] || item.product.sizes[0])) || { price: 0, size: "Standard" };
+    return sum + (sizeOpt.price || 0) * item.quantity;
   }, 0);
 
   const freeDeliveryThreshold = storeConfig.freeDeliveryThreshold ?? 2500;
@@ -75,8 +75,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const handleWhatsAppInstantOrder = () => {
     const itemsList = cartItems
       .map((it) => {
-        const sizeOpt = it.product.sizes[it.selectedSizeIndex] || it.product.sizes[0];
-        return `• ${it.product.name} (${sizeOpt.size}) x ${it.quantity} = Rs. ${sizeOpt.price * it.quantity}`;
+        const sizeOpt = (Array.isArray(it.product?.sizes) && (it.product.sizes[it.selectedSizeIndex] || it.product.sizes[0])) || { price: 0, size: "Standard" };
+        return `• ${it.product?.name || "Item"} (${sizeOpt.size}) x ${it.quantity} = Rs. ${(sizeOpt.price || 0) * it.quantity}`;
       })
       .join("\n");
 

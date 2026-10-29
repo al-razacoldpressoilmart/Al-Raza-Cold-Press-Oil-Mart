@@ -109,7 +109,7 @@ export const OwnerInventoryManager: React.FC<OwnerInventoryManagerProps> = ({
   // Bulk restock all variants by +25 units
   const handleBulkRestock = () => {
     const updated = inventoryList.map((p) => {
-      const newSizes = p.sizes.map((s) => ({
+      const newSizes = (Array.isArray(p.sizes) ? p.sizes : []).map((s) => ({
         ...s,
         stockQuantity: (s.stockQuantity ?? 10) + 25,
         inStock: true,
@@ -136,15 +136,17 @@ export const OwnerInventoryManager: React.FC<OwnerInventoryManagerProps> = ({
 
     if (!matchesSearch) return false;
 
+    const sizesArr = Array.isArray(p.sizes) ? p.sizes : [];
+
     if (filterMode === "low_stock") {
-      return p.sizes.some((s) => {
+      return sizesArr.some((s) => {
         const q = s.stockQuantity ?? 10;
         return s.inStock && q > 0 && q <= (s.lowStockThreshold || 5);
       });
     }
 
     if (filterMode === "out_of_stock") {
-      return p.sizes.some((s) => !s.inStock || (s.stockQuantity ?? 10) <= 0);
+      return sizesArr.some((s) => !s.inStock || (s.stockQuantity ?? 10) <= 0);
     }
 
     return true;
@@ -283,7 +285,7 @@ export const OwnerInventoryManager: React.FC<OwnerInventoryManagerProps> = ({
 
               {/* Sizes and Stock Levels Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {prod.sizes.map((sizeOpt, sIdx) => {
+                {(Array.isArray(prod?.sizes) ? prod.sizes : []).map((sizeOpt, sIdx) => {
                   const stock = sizeOpt.stockQuantity ?? 10;
                   const threshold = sizeOpt.lowStockThreshold || 5;
                   const isOut = !sizeOpt.inStock || stock <= 0;

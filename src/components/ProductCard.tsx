@@ -41,13 +41,28 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const t = TRANSLATIONS[language];
   const isUrdu = language === "ur";
 
-  const currentSize = product.sizes[selectedSizeIndex] || product.sizes[0];
-  const discount = Math.round(
-    ((currentSize.originalPrice - currentSize.price) / currentSize.originalPrice) * 100
-  );
+  const safeSizes = Array.isArray(product?.sizes) && product.sizes.length > 0
+    ? product.sizes
+    : [
+        {
+          size: "Standard Pack",
+          price: 500,
+          originalPrice: 600,
+          inStock: true,
+          stockQuantity: 15,
+          lowStockThreshold: 5,
+        },
+      ];
+
+  const currentSize = safeSizes[selectedSizeIndex] || safeSizes[0];
+  const origPrice = currentSize.originalPrice || currentSize.price || 500;
+  const currPrice = currentSize.price || 500;
+  const discount = origPrice > currPrice
+    ? Math.round(((origPrice - currPrice) / origPrice) * 100)
+    : 0;
 
   const stockQty = currentSize.stockQuantity ?? 15;
-  const isOutOfStock = !!product.isOutOfStock || !currentSize.inStock || stockQty <= 0;
+  const isOutOfStock = !!product?.isOutOfStock || !currentSize.inStock || stockQty <= 0;
   const isLowStock = !isOutOfStock && stockQty <= (currentSize.lowStockThreshold || 5);
 
   const handleAdd = (e: React.MouseEvent) => {
@@ -168,7 +183,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
           {/* Key Benefit Highlights */}
           <div className="mt-2.5 flex flex-wrap gap-1">
-            {product.bestFor.slice(0, 2).map((item, idx) => (
+            {(product?.bestFor || []).slice(0, 2).map((item, idx) => (
               <span
                 key={idx}
                 className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200"
@@ -191,7 +206,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
 
           <div className="grid grid-cols-2 gap-1.5">
-            {product.sizes.map((sizeOpt, idx) => {
+            {safeSizes.map((sizeOpt, idx) => {
               const isSelected = selectedSizeIndex === idx;
               return (
                 <button
@@ -218,11 +233,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <div>
             <div className="flex items-baseline gap-1.5">
               <span className="text-xl font-extrabold text-slate-900">
-                Rs. {currentSize.price}
+                Rs. {currPrice}
               </span>
-              {currentSize.originalPrice > currentSize.price && (
+              {origPrice > currPrice && (
                 <span className="text-xs line-through text-slate-400">
-                  Rs. {currentSize.originalPrice}
+                  Rs. {origPrice}
                 </span>
               )}
             </div>

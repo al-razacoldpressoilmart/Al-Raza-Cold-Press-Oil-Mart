@@ -7,5 +7,6 @@
   "messagingSenderId": "1018697934009",
   "measurementId": "",
   "oAuthClientId": "1018697934009-el9ofq09l7qd8bohkrg0j46hu0a7vvtp.apps.googleusercontent.com",
-  "recaptchaSiteKey": ""
+  "recaptchaSiteKey": "",
+  "firestoreDatabaseId": "ai-studio-alrazacoldpresso-40d92567-2507-436c-abd5-8d8064fd90b0"
 }

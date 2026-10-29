@@ -114,16 +114,18 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
 
       return true;
     }).sort((a, b) => {
+      const aPrice = (Array.isArray(a?.sizes) && a.sizes[0]?.price) ? a.sizes[0].price : 0;
+      const bPrice = (Array.isArray(b?.sizes) && b.sizes[0]?.price) ? b.sizes[0].price : 0;
       if (sortBy === "price-low") {
-        return (a.sizes[0]?.price || 0) - (b.sizes[0]?.price || 0);
+        return aPrice - bPrice;
       }
       if (sortBy === "price-high") {
-        return (b.sizes[0]?.price || 0) - (a.sizes[0]?.price || 0);
+        return bPrice - aPrice;
       }
       if (sortBy === "rating") {
-        return b.rating - a.rating;
+        return (b?.rating || 0) - (a?.rating || 0);
       }
-      return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
+      return (b?.featured ? 1 : 0) - (a?.featured ? 1 : 0);
     });
   }, [products, selectedCategory, searchQuery, sortBy]);
 
@@ -242,7 +244,7 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map((product, idx) => (
               <ProductCard
-                key={product.id}
+                key={product?.id ? `${product.id}-${idx}` : `product-item-${idx}`}
                 product={product}
                 cardIndex={idx}
                 onAddToCart={onAddToCart}

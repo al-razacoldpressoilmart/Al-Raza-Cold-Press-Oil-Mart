@@ -107,7 +107,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const currentPaymentMethod = activePaymentMethods.find((pm) => pm.id === selectedMethodId) || defaultMethod;
 
   const subtotal = cartItems.reduce((sum, item) => {
-    const sizeOpt = item.product.sizes[item.selectedSizeIndex] || item.product.sizes[0];
+    const sizeOpt = (Array.isArray(item.product?.sizes) && (item.product.sizes[item.selectedSizeIndex] || item.product.sizes[0])) || { price: 0, size: "Standard" };
     return sum + (sizeOpt?.price || 0) * item.quantity;
   }, 0);
 
@@ -158,12 +158,16 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       deliveryFee,
       promoDiscount,
       totalAmount: finalTotal,
-      items: cartItems.map((it) => ({
-        product: it.product,
-        selectedSizeIndex: it.selectedSizeIndex,
-        quantity: it.quantity,
-        price: it.product.sizes[it.selectedSizeIndex]?.price || 0,
-      })),
+      items: cartItems.map((it) => {
+        const sz = (Array.isArray(it.product?.sizes) && (it.product.sizes[it.selectedSizeIndex] || it.product.sizes[0])) || { price: 0, size: "Standard" };
+        return {
+          product: it.product,
+          selectedSizeIndex: it.selectedSizeIndex,
+          quantity: it.quantity,
+          price: sz.price || 0,
+          sizeName: sz.size || "Standard",
+        };
+      }),
       date: new Date().toLocaleDateString("en-PK", {
         year: "numeric",
         month: "short",
@@ -322,10 +326,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   className="w-full py-4 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-xl flex items-center justify-center gap-3 transition-transform hover:scale-[1.02] ring-4 ring-emerald-400/50 animate-pulse text-base cursor-pointer"
                 >
                   <MessageCircle className="w-5 h-5 fill-current" />
-                  <span>واٹس ایپ پر آرڈر بھیجیں (Send on WhatsApp)</span>
+                  <span>Send Order Details on WhatsApp (03292832225)</span>
                 </a>
                 <p className="text-xs text-stone-500">
-                  ⚡ فوری تصدیق اور جلد پارسل روانگی کے لیے واٹس ایپ پر آرڈر شیئر کریں۔
+                  ⚡ Click to share your order with the store owner on WhatsApp for instant confirmation & tracking.
                 </p>
               </div>
 
@@ -539,7 +543,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   {/* Cart Items list */}
                   <div className="max-h-48 overflow-y-auto space-y-2 pr-1 text-xs">
                     {cartItems.map((item, idx) => {
-                      const sz = item.product.sizes[item.selectedSizeIndex] || item.product.sizes[0];
+                      const sz = (Array.isArray(item.product?.sizes) && (item.product.sizes[item.selectedSizeIndex] || item.product.sizes[0])) || { price: 0, size: "Standard" };
                       return (
                         <div key={idx} className="flex items-center justify-between py-1 border-b border-stone-100">
                           <div>
